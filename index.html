@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DucAnh</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+        }
+        body {
+            background: #0a0a0f;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 16px;
+        }
+        .card {
+            max-width: 420px;
+            width: 100%;
+            background: linear-gradient(145deg, #13131c, #1a1a28);
+            border-radius: 36px;
+            padding: 28px 22px 32px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.8), 0 0 0 1px #2a2a3e inset;
+            color: #eaeef2;
+            transition: 0.2s;
+        }
+        .header {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            margin-bottom: 10px;
+            font-size: 14px;
+            color: #7f8c9e;
+            letter-spacing: 0.3px;
+        }
+        .header .badge {
+            background: #2a2a42;
+            padding: 2px 12px;
+            border-radius: 30px;
+            font-weight: 600;
+            font-size: 13px;
+            color: #bcc9e6;
+            border: 1px solid #3d3d5c;
+        }
+        .brand {
+            margin: 18px 0 12px 0;
+            display: flex;
+            align-items: baseline;
+            gap: 10px;
+        }
+        .brand h1 {
+            font-size: 38px;
+            font-weight: 300;
+            letter-spacing: -1px;
+            background: linear-gradient(135deg, #d6e2ff, #a0b9f0);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .brand .sub {
+            font-size: 14px;
+            font-weight: 300;
+            color: #6a7b96;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            background: #1a1a2a;
+            padding: 2px 14px;
+            border-radius: 30px;
+            border: 1px solid #2d2d48;
+        }
+        .menu {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 18px;
+        }
+        .menu-item {
+            background: #181826;
+            border-radius: 60px;
+            padding: 14px 22px;
+            border: 1px solid #2b2b44;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: 0.15s;
+            cursor: default;
+        }
+        .menu-item .left {
+            font-weight: 500;
+            font-size: 16px;
+            color: #d6e2f5;
+        }
+        .menu-item .right {
+            font-size: 13px;
+            color: #7c8db0;
+            background: #22223a;
+            padding: 4px 14px;
+            border-radius: 40px;
+            border: 1px solid #343456;
+        }
+        .menu-item.highlight .left {
+            color: #b8d0ff;
+        }
+        .menu-item.highlight .right {
+            background: #26334d;
+            color: #b0c8f0;
+            border-color: #3d5a80;
+        }
+        .divider {
+            height: 1px;
+            background: #28283e;
+            margin: 18px 0 16px 0;
+        }
+        .footer-links {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .footer-item {
+            background: #181826;
+            border-radius: 60px;
+            padding: 14px 22px;
+            border: 1px solid #2b2b44;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            text-decoration: none;
+            transition: 0.15s;
+            cursor: pointer;
+        }
+        .footer-item:hover {
+            background: #22223a;
+            border-color: #3d3d5c;
+        }
+        .footer-item .left {
+            font-weight: 500;
+            font-size: 15px;
+            color: #d0daf0;
+        }
+        .footer-item .right {
+            font-size: 12px;
+            color: #7c8db0;
+            background: #22223a;
+            padding: 4px 14px;
+            border-radius: 40px;
+            border: 1px solid #343456;
+        }
+        .footer-item.tele .left {
+            color: #8ab4f8;
+        }
+        .footer-item.disc .left {
+            color: #8c9eff;
+        }
+        .footer-item.disc {
+            text-decoration: none;
+        }
+        .status-dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background: #4caf84;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+    </style>
+</head>
+<body>
+<div class="card">
+    <!-- header -->
+    <div class="header">
+        <span class="badge">AA</span>
+    </div>
+
+    <!-- brand -->
+    <div class="brand">
+        <h1>DucAnh</h1>
+        <span class="sub"></span>
+    </div>
+
+    <!-- menu chính -->
+    <div class="menu">
+        <div class="menu-item highlight">
+            <span class="left">Phiên bản V18 Mới Nhất</span>
+            <span class="right">🔹</span>
+        </div>
+        <div class="menu-item">
+            <span class="left">HƯỚNG DẪN & SỬA LỖI</span>
+            <span class="right">▶</span>
+        </div>
+        <div class="menu-item">
+            <span class="left">CÁCH CÀI ĐẶT</span>
+            <span class="right">Video</span>
+        </div>
+        <div class="menu-item">
+            <span class="left">FIX LỖI 32MB & LOADING</span>
+            <span class="right">Khắc phục</span>
+        </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- cộng đồng -->
+    <div class="footer-links">
+        <div class="footer-item tele">
+            <span class="left">📱 NHÓM TELEGRAM</span>
+            <span class="right">Cập nhật</span>
+        </div>
+        <a href="https://discord.gg/D6yP45MtP" target="_blank" class="footer-item disc">
+            <span class="left">🎮 BOX DISCORD</span>
+            <span class="right">Cộng đồng</span>
+        </a>
+    </div>
+</div>
+</body>
+</html>
