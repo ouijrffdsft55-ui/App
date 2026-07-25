@@ -870,7 +870,8 @@
 
         // Toggle menu
         function toggleMenu() {
-            document.getElementById('menuDropdown').classList.toggle('active');
+            const dropdown = document.getElementById('menuDropdown');
+            dropdown.classList.toggle('active');
         }
 
         // Update avatar
@@ -986,6 +987,4 @@
             // Update social links
             const fb = document.getElementById('fbLink').value || '#';
             const yt = document.getElementById('ytLink').value || '#';
-            const zalo = document.getElementById('zaloLink').value || '#';
-            const tele = document.getElementById('teleLink').value || '#';
-            const
+            const z
