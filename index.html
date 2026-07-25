@@ -37,16 +37,21 @@
             position: relative;
         }
 
+        /* Menu hamburger - CHỈ HIỆN KHI CÓ ?edit=true */
         .menu-icon {
             position: absolute;
             top: 1.8rem;
             left: 2rem;
             cursor: pointer;
             z-index: 10;
-            display: flex;
+            display: none;
             flex-direction: column;
             gap: 5px;
             padding: 4px;
+        }
+
+        .menu-icon.visible {
+            display: flex;
         }
 
         .menu-icon span {
@@ -577,8 +582,8 @@
 </head>
 <body>
     <div class="card">
-        <!-- Menu 3 gạch -->
-        <div class="menu-icon" onclick="toggleMenu()">
+        <!-- Menu 3 gạch - CHỈ HIỆN KHI CÓ ?edit=true -->
+        <div class="menu-icon" id="menuIcon" onclick="toggleMenu()">
             <span></span>
             <span></span>
             <span></span>
@@ -703,14 +708,24 @@
     </div>
 
     <script>
+        // Kiểm tra URL có ?edit=true không để hiển thị menu
+        var urlParams = new URLSearchParams(window.location.search);
+        var isEditMode = urlParams.get('edit') === 'true';
+        
+        if (isEditMode) {
+            document.getElementById('menuIcon').classList.add('visible');
+        }
+
         // Hàm toggle menu
         function toggleMenu() {
             var dropdown = document.getElementById('menuDropdown');
-            if (dropdown.classList.contains('active')) {
-                dropdown.classList.remove('active');
-            } else {
-                dropdown.classList.add('active');
-            }
+            dropdown.classList.toggle('active');
+        }
+
+        // Cập nhật link MyPages - LUÔN LÀ LINK GỐC (không có ?edit=true)
+        function updateMypagesLink() {
+            var currentUrl = window.location.href.split('?')[0];
+            document.getElementById('mypagesLink').value = currentUrl;
         }
 
         // Các hàm khác
@@ -819,9 +834,8 @@
             document.getElementById('teleLinkDisplay').href = tele;
             document.getElementById('discordLinkDisplay').href = discord;
 
-            // Cập nhật link MyPages
-            var currentUrl = window.location.href.split('?')[0];
-            document.getElementById('mypagesLink').value = currentUrl;
+            // Cập nhật link MyPages (luôn là link gốc)
+            updateMypagesLink();
 
             // Đóng menu
             document.getElementById('menuDropdown').classList.remove('active');
@@ -829,8 +843,7 @@
 
         // Tự động cập nhật link khi load trang
         window.onload = function() {
-            var currentUrl = window.location.href.split('?')[0];
-            document.getElementById('mypagesLink').value = currentUrl;
+            updateMypagesLink();
         };
     </script>
 </body>
