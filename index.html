@@ -38,7 +38,7 @@
             position: relative;
         }
 
-        /* Menu hamburger - 3 gạch ngang góc trái - CHỈ HIỂN THỊ KHI CÓ ?edit=true */
+        /* Menu hamburger - 3 gạch ngang góc trái */
         .menu-icon {
             position: absolute;
             top: 1.8rem;
@@ -539,8 +539,8 @@
 </head>
 <body>
     <div class="card">
-        <!-- Menu 3 gạch ngang góc trái - CHỈ HIỆN KHI CÓ ?edit=true -->
-        <div class="menu-icon" id="menuIcon" onclick="toggleMenu()" aria-label="Menu">
+        <!-- Menu 3 gạch ngang góc trái - luôn hiển thị cho chủ sở hữu -->
+        <div class="menu-icon visible" id="menuIcon" onclick="toggleMenu()" aria-label="Menu">
             <span></span>
             <span></span>
             <span></span>
@@ -590,7 +590,7 @@
                 <input type="url" id="discordLink" placeholder="Link Discord" value="#">
             </div>
             
-            <button class="btn-update" onclick="updateAll()"><i class="fas fa-save"></i> Cập nhật</button>
+            <button class="btn-update" onclick="updateAll()"><i class="fas fa-save"></i> Cập nhật & Lưu</button>
         </div>
 
         <div class="profile-grid">
@@ -611,8 +611,6 @@
                         <span id="statusText">Online</span>
                     </span>
                 </div>
-
-                <!-- Đã xóa stats-grid -->
 
                 <div class="social-links" id="socialLinks">
                     <a href="#" id="fbLinkDisplay" target="_blank" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
@@ -656,19 +654,95 @@
     </div>
 
     <script>
-        // Kiểm tra URL có ?edit=true không để hiển thị menu
-        const urlParams = new URLSearchParams(window.location.search);
-        const isEditMode = urlParams.get('edit') === 'true';
-        
-        if (isEditMode) {
-            document.getElementById('menuIcon').classList.add('visible');
+        // Khởi tạo dữ liệu mặc định
+        const defaultData = {
+            name: 'Duc Anh',
+            avatar: 'https://ui-avatars.com/api/?name=Duc+Anh&background=4a6cf7&color=fff&size=200&font-size=0.5',
+            status: 'online',
+            musicLink: 'https://www.youtube.com/watch?v=sC6yg7V8cSM',
+            musicTitle: 'Nhạc Chill TikTok',
+            musicArtist: 'Anten',
+            fb: '#',
+            yt: '#',
+            zalo: '#',
+            tele: '#',
+            discord: '#'
+        };
+
+        // Load dữ liệu từ localStorage hoặc dùng mặc định
+        let userData = {};
+
+        function loadData() {
+            const saved = localStorage.getItem('userProfileData');
+            if (saved) {
+                try {
+                    userData = JSON.parse(saved);
+                } catch(e) {
+                    userData = { ...defaultData };
+                }
+            } else {
+                userData = { ...defaultData };
+            }
+            return userData;
         }
 
-        let musicLink = 'https://www.youtube.com/watch?v=sC6yg7V8cSM';
-        let musicTitle = 'Nhạc Chill TikTok';
-        let musicArtist = 'Anten';
-        let isPlaying = false;
-        let embedUrl = '';
+        function saveData() {
+            localStorage.setItem('userProfileData', JSON.stringify(userData));
+        }
+
+        // Áp dụng dữ liệu lên giao diện
+        function applyData() {
+            const data = loadData();
+            
+            // Tên
+            document.getElementById('displayName').textContent = data.name;
+            document.getElementById('nameInput').value = data.name;
+            
+            // Avatar
+            if (data.avatar) {
+                document.getElementById('avatarImage').src = data.avatar;
+                document.getElementById('avatarImage').style.display = 'block';
+            }
+            
+            // Status
+            const isOnline = data.status === 'online';
+            const toggle = document.getElementById('statusToggle');
+            const label = document.getElementById('statusLabel');
+            const badge = document.getElementById('statusBadge');
+            const text = document.getElementById('statusText');
+            
+            if (isOnline) {
+                toggle.classList.add('active');
+                label.textContent = 'Online';
+                badge.className = 'status-badge online';
+                text.textContent = 'Online';
+            } else {
+                toggle.classList.remove('active');
+                label.textContent = 'Offline';
+                badge.className = 'status-badge offline';
+                text.textContent = 'Offline';
+            }
+            
+            // Music
+            document.getElementById('musicLink').value = data.musicLink || '';
+            document.getElementById('musicTitle').value = data.musicTitle || 'YouTube Video';
+            document.getElementById('musicArtist').value = data.musicArtist || 'Artist';
+            document.getElementById('musicDisplayTitle').textContent = data.musicTitle || 'YouTube Video';
+            document.getElementById('musicDisplayArtist').textContent = data.musicArtist || 'Artist';
+            
+            // Social links
+            document.getElementById('fbLink').value = data.fb || '#';
+            document.getElementById('ytLink').value = data.yt || '#';
+            document.getElementById('zaloLink').value = data.zalo || '#';
+            document.getElementById('teleLink').value = data.tele || '#';
+            document.getElementById('discordLink').value = data.discord || '#';
+            
+            document.getElementById('fbLinkDisplay').href = data.fb || '#';
+            document.getElementById('ytLinkDisplay').href = data.yt || '#';
+            document.getElementById('zaloLinkDisplay').href = data.zalo || '#';
+            document.getElementById('teleLinkDisplay').href = data.tele || '#';
+            document.getElementById('discordLinkDisplay').href = data.discord || '#';
+        }
 
         // Toggle menu
         function toggleMenu() {
@@ -681,10 +755,12 @@
             if (file) {
                 const reader = new FileReader();
                 reader.onload = function(e) {
-                    document.getElementById('avatarImage').src = e.target.result;
+                    const avatarUrl = e.target.result;
+                    document.getElementById('avatarImage').src = avatarUrl;
                     document.getElementById('avatarImage').style.display = 'block';
                     const placeholder = document.querySelector('.avatar-placeholder');
                     if (placeholder) placeholder.style.display = 'none';
+                    userData.avatar = avatarUrl;
                 };
                 reader.readAsDataURL(file);
             }
@@ -705,12 +781,15 @@
                 label.textContent = 'Online';
                 badge.className = 'status-badge online';
                 text.textContent = 'Online';
+                userData.status = 'online';
             } else {
                 toggle.classList.remove('active');
                 label.textContent = 'Offline';
                 badge.className = 'status-badge offline';
                 text.textContent = 'Offline';
+                userData.status = 'offline';
             }
+            saveData();
         }
 
         // Get embed URL from YouTube link
@@ -727,6 +806,9 @@
             return embed;
         }
 
+        let isPlaying = false;
+        let embedUrl = '';
+
         // Toggle music player
         function toggleMusicPlayer() {
             const iframe = document.getElementById('musicIframe');
@@ -734,7 +816,6 @@
             const playIcon = document.getElementById('playIcon');
             
             if (!isPlaying) {
-                // Play
                 if (embedUrl) {
                     iframe.src = embedUrl + '?autoplay=1&rel=0';
                     playBtn.classList.add('playing');
@@ -744,7 +825,6 @@
                     alert('Vui lòng cập nhật link nhạc trong menu!');
                 }
             } else {
-                // Stop
                 iframe.src = '';
                 playBtn.classList.remove('playing');
                 playIcon.className = 'fas fa-play';
@@ -757,6 +837,7 @@
             // Update name
             const newName = document.getElementById('nameInput').value.trim() || 'Duc Anh';
             document.getElementById('displayName').textContent = newName;
+            userData.name = newName;
             
             // Update avatar if file input has value
             const fileInput = document.getElementById('avatarUpload');
@@ -765,9 +846,13 @@
             }
 
             // Update music
-            musicLink = document.getElementById('musicLink').value || '#';
-            musicTitle = document.getElementById('musicTitle').value || 'YouTube Video';
-            musicArtist = document.getElementById('musicArtist').value || 'Artist';
+            const musicLink = document.getElementById('musicLink').value || '#';
+            const musicTitle = document.getElementById('musicTitle').value || 'YouTube Video';
+            const musicArtist = document.getElementById('musicArtist').value || 'Artist';
+            
+            userData.musicLink = musicLink;
+            userData.musicTitle = musicTitle;
+            userData.musicArtist = musicArtist;
             
             document.getElementById('musicDisplayTitle').textContent = musicTitle;
             document.getElementById('musicDisplayArtist').textContent = musicArtist;
@@ -780,6 +865,12 @@
             const zalo = document.getElementById('zaloLink').value || '#';
             const tele = document.getElementById('teleLink').value || '#';
             const discord = document.getElementById('discordLink').value || '#';
+
+            userData.fb = fb;
+            userData.yt = yt;
+            userData.zalo = zalo;
+            userData.tele = tele;
+            userData.discord = discord;
 
             document.getElementById('fbLinkDisplay').href = fb;
             document.getElementById('ytLinkDisplay').href = yt;
@@ -795,22 +886,26 @@
                 isPlaying = false;
             }
 
+            // Lưu tất cả dữ liệu
+            saveData();
+
             // Close menu
             document.getElementById('menuDropdown').classList.remove('active');
         }
 
-        // Load initial values
+        // Load data khi trang load
         document.addEventListener('DOMContentLoaded', function() {
-            document.getElementById('nameInput').value = document.getElementById('displayName').textContent;
-            document.getElementById('fbLink').value = document.getElementById('fbLinkDisplay').href;
-            document.getElementById('ytLink').value = document.getElementById('ytLinkDisplay').href;
-            document.getElementById('zaloLink').value = document.getElementById('zaloLinkDisplay').href;
-            document.getElementById('teleLink').value = document.getElementById('teleLinkDisplay').href;
-            document.getElementById('discordLink').value = document.getElementById('discordLinkDisplay').href;
+            applyData();
             
-            // Set initial music
-            embedUrl = getEmbedUrl(musicLink);
+            // Set initial music embed
+            embedUrl = getEmbedUrl(userData.musicLink || '');
+            
+            // Đồng bộ trạng thái online
+            isOnline = userData.status === 'online';
         });
+
+        // Menu 3 gạch luôn hiển thị cho chủ sở hữu
+        // (không cần điều kiện gì thêm)
     </script>
 </body>
 </html>
