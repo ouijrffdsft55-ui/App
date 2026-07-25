@@ -3,218 +3,855 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DucAnh</title>
+    <title>Trang web cá nhân · Duc Anh</title>
+    <!-- Font Awesome 6 (miễn phí) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'Segoe UI', system-ui, sans-serif;
+            font-family: 'Segoe UI', Roboto, system-ui, -apple-system, sans-serif;
         }
+
         body {
-            background: #0a0a0f;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            background: linear-gradient(145deg, #f8faff 0%, #eef2f9 100%);
             min-height: 100vh;
-            padding: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem 1.5rem;
         }
+
         .card {
-            max-width: 420px;
+            max-width: 800px;
             width: 100%;
-            background: linear-gradient(145deg, #13131c, #1a1a28);
-            border-radius: 36px;
-            padding: 28px 22px 32px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.8), 0 0 0 1px #2a2a3e inset;
-            color: #eaeef2;
+            background: rgba(255, 255, 255, 0.75);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-radius: 3.5rem;
+            padding: 2.5rem 2.8rem;
+            box-shadow: 0 30px 60px rgba(0, 20, 40, 0.12), 
+                        0 10px 25px rgba(0, 0, 0, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            transition: 0.3s ease;
+            position: relative;
+        }
+
+        /* Menu hamburger - 3 gạch ngang góc trái */
+        .menu-icon {
+            position: absolute;
+            top: 1.8rem;
+            left: 2rem;
+            font-size: 1.8rem;
+            color: #1f2d5a;
+            cursor: pointer;
+            transition: 0.2s;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            padding: 4px;
+        }
+
+        .menu-icon span {
+            display: block;
+            width: 28px;
+            height: 3px;
+            background: #1f2d5a;
+            border-radius: 6px;
+            transition: 0.25s ease;
+        }
+
+        .menu-icon:hover span {
+            background: #4a6cf7;
+        }
+
+        .menu-icon:hover {
+            transform: scale(1.05);
+        }
+
+        /* Menu dropdown */
+        .menu-dropdown {
+            position: absolute;
+            top: 4.5rem;
+            left: 2rem;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(12px);
+            border-radius: 1.5rem;
+            padding: 1.5rem 1.8rem;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            min-width: 280px;
+            display: none;
+            z-index: 20;
+        }
+
+        .menu-dropdown.active {
+            display: block;
+        }
+
+        .menu-dropdown label {
+            display: block;
+            font-weight: 600;
+            color: #0b1a3a;
+            margin-top: 1rem;
+            font-size: 0.9rem;
+        }
+
+        .menu-dropdown label:first-child {
+            margin-top: 0;
+        }
+
+        .menu-dropdown input[type="text"],
+        .menu-dropdown input[type="url"] {
+            width: 100%;
+            padding: 0.6rem 1rem;
+            border-radius: 1rem;
+            border: 1px solid #dce3ed;
+            background: white;
+            font-size: 0.9rem;
+            margin-top: 0.3rem;
             transition: 0.2s;
         }
-        .header {
-            display: flex;
-            justify-content: flex-end;
-            align-items: center;
-            margin-bottom: 10px;
-            font-size: 14px;
-            color: #7f8c9e;
-            letter-spacing: 0.3px;
+
+        .menu-dropdown input[type="text"]:focus,
+        .menu-dropdown input[type="url"]:focus {
+            outline: none;
+            border-color: #4a6cf7;
+            box-shadow: 0 0 0 3px rgba(74, 108, 247, 0.1);
         }
-        .header .badge {
-            background: #2a2a42;
-            padding: 2px 12px;
-            border-radius: 30px;
+
+        .menu-dropdown input[type="file"] {
+            margin-top: 0.3rem;
+            font-size: 0.85rem;
+        }
+
+        .menu-dropdown .btn-update {
+            background: #4a6cf7;
+            color: white;
+            border: none;
+            padding: 0.6rem 1.5rem;
+            border-radius: 2rem;
             font-weight: 600;
-            font-size: 13px;
-            color: #bcc9e6;
-            border: 1px solid #3d3d5c;
+            cursor: pointer;
+            margin-top: 1.2rem;
+            width: 100%;
+            transition: 0.2s;
+            font-size: 0.95rem;
         }
-        .brand {
-            margin: 18px 0 12px 0;
+
+        .menu-dropdown .btn-update:hover {
+            background: #3a5bd9;
+            transform: scale(1.02);
+        }
+
+        .menu-dropdown .social-link-input {
             display: flex;
-            align-items: baseline;
-            gap: 10px;
+            align-items: center;
+            gap: 0.6rem;
+            margin-top: 0.5rem;
         }
-        .brand h1 {
-            font-size: 38px;
-            font-weight: 300;
-            letter-spacing: -1px;
-            background: linear-gradient(135deg, #d6e2ff, #a0b9f0);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+
+        .menu-dropdown .social-link-input i {
+            width: 1.5rem;
+            font-size: 1.1rem;
+            color: #4a6cf7;
         }
-        .brand .sub {
-            font-size: 14px;
-            font-weight: 300;
-            color: #6a7b96;
-            letter-spacing: 3px;
-            text-transform: uppercase;
-            background: #1a1a2a;
-            padding: 2px 14px;
+
+        .menu-dropdown .social-link-input input {
+            flex: 1;
+        }
+
+        /* Status toggle trong menu */
+        .status-toggle-row {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-top: 0.5rem;
+            padding: 0.3rem 0;
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 50px;
+            height: 28px;
+            background: #d1d9e6;
             border-radius: 30px;
-            border: 1px solid #2d2d48;
+            cursor: pointer;
+            transition: 0.3s;
+            flex-shrink: 0;
         }
-        .menu {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            margin-top: 18px;
+
+        .toggle-switch.active {
+            background: #22c55e;
         }
-        .menu-item {
-            background: #181826;
-            border-radius: 60px;
-            padding: 14px 22px;
-            border: 1px solid #2b2b44;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            transition: 0.15s;
-            cursor: default;
+
+        .toggle-switch .toggle-slider {
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 22px;
+            height: 22px;
+            background: white;
+            border-radius: 50%;
+            transition: 0.3s;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.15);
         }
-        .menu-item .left {
+
+        .toggle-switch.active .toggle-slider {
+            left: 25px;
+        }
+
+        .status-label {
             font-weight: 500;
-            font-size: 16px;
-            color: #d6e2f5;
+            color: #1f2d5a;
+            font-size: 0.95rem;
         }
-        .menu-item .right {
-            font-size: 13px;
-            color: #7c8db0;
-            background: #22223a;
-            padding: 4px 14px;
-            border-radius: 40px;
-            border: 1px solid #343456;
+
+        /* bố cục chính */
+        .profile-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+            align-items: center;
+            justify-items: center;
+            margin-top: 0.5rem;
         }
-        .menu-item.highlight .left {
-            color: #b8d0ff;
-        }
-        .menu-item.highlight .right {
-            background: #26334d;
-            color: #b0c8f0;
-            border-color: #3d5a80;
-        }
-        .divider {
-            height: 1px;
-            background: #28283e;
-            margin: 18px 0 16px 0;
-        }
-        .footer-links {
+
+        /* Cột trái – ảnh đại diện + thông tin nhanh */
+        .avatar-section {
             display: flex;
             flex-direction: column;
-            gap: 8px;
-        }
-        .footer-item {
-            background: #181826;
-            border-radius: 60px;
-            padding: 14px 22px;
-            border: 1px solid #2b2b44;
-            display: flex;
-            justify-content: space-between;
             align-items: center;
-            text-decoration: none;
-            transition: 0.15s;
+            text-align: center;
+        }
+
+        .avatar-wrapper {
+            width: 100%;
+            max-width: 200px;
+            aspect-ratio: 1/1;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #4a6cf7, #9d7aff);
+            padding: 5px;
+            box-shadow: 0 15px 35px rgba(74, 108, 247, 0.25);
+            transition: 0.25s;
             cursor: pointer;
         }
-        .footer-item:hover {
-            background: #22223a;
-            border-color: #3d3d5c;
+
+        .avatar-wrapper:hover {
+            transform: scale(1.02);
+            box-shadow: 0 20px 45px rgba(74, 108, 247, 0.35);
         }
-        .footer-item .left {
-            font-weight: 500;
-            font-size: 15px;
-            color: #d0daf0;
+
+        .avatar-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+            background: white;
+            display: block;
         }
-        .footer-item .right {
-            font-size: 12px;
-            color: #7c8db0;
-            background: #22223a;
-            padding: 4px 14px;
-            border-radius: 40px;
-            border: 1px solid #343456;
+
+        .avatar-placeholder {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: #d9e2f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 4.5rem;
+            font-weight: 600;
+            color: #2a3b6b;
+            background: linear-gradient(145deg, #eef4ff, #d5dff0);
         }
-        .footer-item.tele .left {
-            color: #8ab4f8;
+
+        .name-title {
+            margin-top: 1.2rem;
         }
-        .footer-item.disc .left {
-            color: #8c9eff;
+
+        .name-title h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #0b1a3a;
+            letter-spacing: -0.5px;
         }
-        .footer-item.disc {
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-top: 0.3rem;
+            padding: 0.35rem 1.2rem;
+            border-radius: 60px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(0,0,0,0.05);
+            transition: 0.2s;
+            background: rgba(255,255,255,0.5);
+        }
+
+        .status-badge .status-dot {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            transition: 0.3s;
+        }
+
+        .status-badge.online .status-dot {
+            background: #22c55e;
+            box-shadow: 0 0 12px rgba(34, 197, 94, 0.4);
+        }
+
+        .status-badge.offline .status-dot {
+            background: #ef4444;
+            box-shadow: 0 0 12px rgba(239, 68, 68, 0.4);
+        }
+
+        .status-badge.online {
+            color: #15803d;
+            border-color: rgba(34, 197, 94, 0.2);
+        }
+
+        .status-badge.offline {
+            color: #b91c1c;
+            border-color: rgba(239, 68, 68, 0.2);
+        }
+
+        /* Stats - như trong ảnh */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 0.5rem;
+            margin-top: 1rem;
+            width: 100%;
+            max-width: 450px;
+            background: rgba(255,255,255,0.3);
+            border-radius: 1.5rem;
+            padding: 0.8rem 0.5rem;
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(255,255,255,0.5);
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-item .number {
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: #0b1a3a;
+        }
+
+        .stat-item .label {
+            font-size: 0.6rem;
+            color: #5a6b8a;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            font-weight: 600;
+        }
+
+        /* Social links */
+        .social-links {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.2rem;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .social-links a {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 44px;
+            height: 44px;
+            border-radius: 30px;
+            background: white;
+            color: #1f2d5a;
+            font-size: 1.3rem;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.04);
+            transition: 0.2s ease;
+            border: 1px solid rgba(0,0,0,0.02);
             text-decoration: none;
         }
-        .status-dot {
-            display: inline-block;
-            width: 8px;
-            height: 8px;
-            background: #4caf84;
+
+        .social-links a:hover {
+            background: #4a6cf7;
+            color: white;
+            transform: translateY(-5px);
+            box-shadow: 0 12px 25px rgba(74, 108, 247, 0.3);
+            border-color: #4a6cf7;
+        }
+
+        /* Music Player - style giống trong ảnh */
+        .music-player-box {
+            margin-top: 1.2rem;
+            width: 100%;
+            max-width: 450px;
+            background: rgba(255,255,255,0.5);
+            backdrop-filter: blur(8px);
+            border-radius: 1.5rem;
+            padding: 1.2rem 1.5rem;
+            border: 1px solid rgba(255,255,255,0.6);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.04);
+        }
+
+        .music-player-box .player-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.8rem;
+            color: #5a6b8a;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .music-player-box .player-header i {
+            color: #4a6cf7;
+        }
+
+        .music-player-box .now-playing {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-top: 0.8rem;
+            padding: 0.6rem 0.8rem;
+            background: rgba(255,255,255,0.4);
+            border-radius: 1rem;
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+
+        .music-player-box .now-playing .thumb {
+            width: 48px;
+            height: 48px;
+            border-radius: 0.8rem;
+            background: linear-gradient(135deg, #4a6cf7, #9d7aff);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.4rem;
+            flex-shrink: 0;
+        }
+
+        .music-player-box .now-playing .info {
+            flex: 1;
+            text-align: left;
+        }
+
+        .music-player-box .now-playing .info .title {
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: #0b1a3a;
+        }
+
+        .music-player-box .now-playing .info .sub {
+            font-size: 0.75rem;
+            color: #5a6b8a;
+        }
+
+        .music-player-box .now-playing .controls {
+            display: flex;
+            gap: 0.8rem;
+            align-items: center;
+        }
+
+        .music-player-box .now-playing .controls button {
+            background: none;
+            border: none;
+            font-size: 1.2rem;
+            color: #1f2d5a;
+            cursor: pointer;
+            transition: 0.2s;
+            padding: 4px;
+        }
+
+        .music-player-box .now-playing .controls button:hover {
+            color: #4a6cf7;
+            transform: scale(1.1);
+        }
+
+        .music-player-box .now-playing .controls .play-btn {
+            width: 38px;
+            height: 38px;
             border-radius: 50%;
-            margin-right: 8px;
+            background: #4a6cf7;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            border: none;
+            cursor: pointer;
+            transition: 0.2s;
+            box-shadow: 0 4px 15px rgba(74, 108, 247, 0.25);
+        }
+
+        .music-player-box .now-playing .controls .play-btn:hover {
+            background: #3a5bd9;
+            transform: scale(1.05);
+        }
+
+        .music-player-box .now-playing .controls .play-btn.playing {
+            background: #ef4444;
+        }
+
+        .music-player-box .now-playing .controls .play-btn.playing:hover {
+            background: #dc2626;
+        }
+
+        /* Iframe ẩn để phát nhạc */
+        .music-iframe-wrapper {
+            display: none;
+        }
+
+        /* responsive */
+        @media (max-width: 880px) {
+            .card {
+                padding: 2rem 1.5rem;
+                border-radius: 2.5rem;
+            }
+            .menu-icon {
+                top: 1.2rem;
+                left: 1.2rem;
+            }
+            .menu-dropdown {
+                left: 1rem;
+                right: 1rem;
+                min-width: unset;
+            }
+        }
+
+        @media (max-width: 550px) {
+            .card {
+                padding: 1.5rem 1rem;
+            }
+            .social-links a {
+                width: 40px;
+                height: 40px;
+                font-size: 1.1rem;
+            }
+            .menu-icon {
+                top: 1rem;
+                left: 1rem;
+            }
+            .menu-icon span {
+                width: 24px;
+                height: 3px;
+            }
+            .avatar-wrapper {
+                max-width: 140px;
+            }
+            .menu-dropdown {
+                padding: 1rem;
+            }
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 0.8rem;
+            }
+            .music-player-box {
+                padding: 1rem;
+            }
+            .music-player-box .now-playing {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+            .music-player-box .now-playing .info {
+                text-align: center;
+                width: 100%;
+            }
         }
     </style>
 </head>
 <body>
-<div class="card">
-    <!-- header -->
-    <div class="header">
-        <span class="badge">AA</span>
+    <div class="card">
+        <!-- Menu 3 gạch ngang góc trái -->
+        <div class="menu-icon" onclick="toggleMenu()" aria-label="Menu">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+
+        <!-- Menu dropdown -->
+        <div class="menu-dropdown" id="menuDropdown">
+            <label><i class="fas fa-user-circle"></i> Thay đổi avatar</label>
+            <input type="file" id="avatarUpload" accept="image/*" onchange="updateAvatar(event)">
+            
+            <label><i class="fas fa-user"></i> Thay đổi tên</label>
+            <input type="text" id="nameInput" placeholder="Nhập tên mới" value="Duc Anh">
+            
+            <label style="margin-top: 1.2rem;"><i class="fas fa-toggle-on"></i> Trạng thái</label>
+            <div class="status-toggle-row">
+                <div class="toggle-switch active" id="statusToggle" onclick="toggleStatus()">
+                    <div class="toggle-slider"></div>
+                </div>
+                <span class="status-label" id="statusLabel">Online</span>
+            </div>
+
+            <label style="margin-top: 1.2rem;"><i class="fas fa-music"></i> Nhạc (link YouTube)</label>
+            <input type="url" id="musicLink" placeholder="https://www.youtube.com/watch?v=..." value="https://www.youtube.com/watch?v=sC6yg7V8cSM">
+            <input type="text" id="musicTitle" placeholder="Tên bài hát" value="Nhạc Chill TikTok" style="margin-top:0.3rem;">
+            <input type="text" id="musicArtist" placeholder="Nghệ sĩ" value="Anten" style="margin-top:0.3rem;">
+            
+            <label style="margin-top: 1.2rem;"><i class="fas fa-link"></i> Link mạng xã hội</label>
+            
+            <div class="social-link-input">
+                <i class="fab fa-facebook-f"></i>
+                <input type="url" id="fbLink" placeholder="Link Facebook" value="#">
+            </div>
+            <div class="social-link-input">
+                <i class="fab fa-youtube"></i>
+                <input type="url" id="ytLink" placeholder="Link YouTube" value="#">
+            </div>
+            <div class="social-link-input">
+                <i class="fas fa-comment" style="color: #0068ff;"></i>
+                <input type="url" id="zaloLink" placeholder="Link Zalo" value="#">
+            </div>
+            <div class="social-link-input">
+                <i class="fab fa-telegram"></i>
+                <input type="url" id="teleLink" placeholder="Link Telegram" value="#">
+            </div>
+            <div class="social-link-input">
+                <i class="fab fa-discord"></i>
+                <input type="url" id="discordLink" placeholder="Link Discord" value="#">
+            </div>
+            
+            <button class="btn-update" onclick="updateAll()"><i class="fas fa-save"></i> Cập nhật</button>
+        </div>
+
+        <div class="profile-grid">
+            <div class="avatar-section">
+                <div class="avatar-wrapper" onclick="document.getElementById('avatarUpload').click()">
+                    <img class="avatar-img" id="avatarImage"
+                         src="https://ui-avatars.com/api/?name=Duc+Anh&background=4a6cf7&color=fff&size=200&font-size=0.5" 
+                         alt="Ảnh đại diện"
+                         onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    <div class="avatar-placeholder" style="display: none;">
+                        <i class="fas fa-user" style="color: #2a3b6b;"></i>
+                    </div>
+                </div>
+                <div class="name-title">
+                    <h1 id="displayName">Duc Anh</h1>
+                    <span class="status-badge online" id="statusBadge">
+                        <span class="status-dot"></span>
+                        <span id="statusText">Online</span>
+                    </span>
+                </div>
+
+                <!-- Stats -->
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="number">12K+</div>
+                        <div class="label">FOLLOWERS</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="number">500+</div>
+                        <div class="label">VIDEOS</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="number">3.2M</div>
+                        <div class="label">VIEWS</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="number">#1</div>
+                        <div class="label">RANK</div>
+                    </div>
+                </div>
+
+                <div class="social-links" id="socialLinks">
+                    <a href="#" id="fbLinkDisplay" target="_blank" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#" id="ytLinkDisplay" target="_blank" aria-label="YouTube"><i class="fab fa-youtube"></i></a>
+                    <a href="#" id="zaloLinkDisplay" target="_blank" aria-label="Zalo"><i class="fas fa-comment" style="color: #0068ff;"></i></a>
+                    <a href="#" id="teleLinkDisplay" target="_blank" aria-label="Telegram"><i class="fab fa-telegram"></i></a>
+                    <a href="#" id="discordLinkDisplay" target="_blank" aria-label="Discord"><i class="fab fa-discord"></i></a>
+                </div>
+
+                <!-- Music Player -->
+                <div class="music-player-box">
+                    <div class="player-header">
+                        <span><i class="fas fa-headphones"></i> MUSIC PLAYER</span>
+                        <span>NOW PLAYING</span>
+                    </div>
+                    <div class="now-playing">
+                        <div class="thumb">
+                            <i class="fas fa-music"></i>
+                        </div>
+                        <div class="info">
+                            <div class="title" id="musicDisplayTitle">Nhạc Chill TikTok</div>
+                            <div class="sub" id="musicDisplayArtist">Anten</div>
+                        </div>
+                        <div class="controls">
+                            <button onclick="toggleMusicPlayer()" title="Dừng">
+                                <i class="fas fa-stop"></i>
+                            </button>
+                            <button class="play-btn" id="playBtn" onclick="toggleMusicPlayer()">
+                                <i class="fas fa-play" id="playIcon"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Hidden iframe for music -->
+                <div class="music-iframe-wrapper">
+                    <iframe id="musicIframe" src="" allow="autoplay; encrypted-media" style="width:0;height:0;border:none;"></iframe>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <!-- brand -->
-    <div class="brand">
-        <h1>DucAnh</h1>
-        <span class="sub"></span>
-    </div>
+    <script>
+        let musicLink = 'https://www.youtube.com/watch?v=sC6yg7V8cSM';
+        let musicTitle = 'Nhạc Chill TikTok';
+        let musicArtist = 'Anten';
+        let isPlaying = false;
+        let embedUrl = '';
 
-    <!-- menu chính -->
-    <div class="menu">
-        <div class="menu-item highlight">
-            <span class="left">Phiên bản V18 Mới Nhất</span>
-            <span class="right">🔹</span>
-        </div>
-        <div class="menu-item">
-            <span class="left">HƯỚNG DẪN & SỬA LỖI</span>
-            <span class="right">▶</span>
-        </div>
-        <div class="menu-item">
-            <span class="left">CÁCH CÀI ĐẶT</span>
-            <span class="right">Video</span>
-        </div>
-        <div class="menu-item">
-            <span class="left">FIX LỖI 32MB & LOADING</span>
-            <span class="right">Khắc phục</span>
-        </div>
-    </div>
+        // Toggle menu
+        function toggleMenu() {
+            document.getElementById('menuDropdown').classList.toggle('active');
+        }
 
-    <div class="divider"></div>
+        // Update avatar
+        function updateAvatar(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('avatarImage').src = e.target.result;
+                    document.getElementById('avatarImage').style.display = 'block';
+                    const placeholder = document.querySelector('.avatar-placeholder');
+                    if (placeholder) placeholder.style.display = 'none';
+                };
+                reader.readAsDataURL(file);
+            }
+        }
 
-    <!-- cộng đồng -->
-    <div class="footer-links">
-        <div class="footer-item tele">
-            <span class="left">📱 NHÓM TELEGRAM</span>
-            <span class="right">Cập nhật</span>
-        </div>
-        <a href="https://discord.gg/D6yP45MtP" target="_blank" class="footer-item disc">
-            <span class="left">🎮 BOX DISCORD</span>
-            <span class="right">Cộng đồng</span>
-        </a>
-    </div>
-</div>
+        // Toggle status
+        let isOnline = true;
+
+        function toggleStatus() {
+            isOnline = !isOnline;
+            const toggle = document.getElementById('statusToggle');
+            const label = document.getElementById('statusLabel');
+            const badge = document.getElementById('statusBadge');
+            const text = document.getElementById('statusText');
+            
+            if (isOnline) {
+                toggle.classList.add('active');
+                label.textContent = 'Online';
+                badge.className = 'status-badge online';
+                text.textContent = 'Online';
+            } else {
+                toggle.classList.remove('active');
+                label.textContent = 'Offline';
+                badge.className = 'status-badge offline';
+                text.textContent = 'Offline';
+            }
+        }
+
+        // Get embed URL from YouTube link
+        function getEmbedUrl(url) {
+            if (!url || url === '#') return '';
+            let embed = url;
+            if (url.includes('watch?v=')) {
+                const videoId = url.split('watch?v=')[1]?.split('&')[0];
+                if (videoId) embed = `https://www.youtube.com/embed/${videoId}`;
+            } else if (url.includes('youtu.be/')) {
+                const videoId = url.split('youtu.be/')[1]?.split('?')[0];
+                if (videoId) embed = `https://www.youtube.com/embed/${videoId}`;
+            }
+            return embed;
+        }
+
+        // Toggle music player
+        function toggleMusicPlayer() {
+            const iframe = document.getElementById('musicIframe');
+            const playBtn = document.getElementById('playBtn');
+            const playIcon = document.getElementById('playIcon');
+            
+            if (!isPlaying) {
+                // Play
+                if (embedUrl) {
+                    iframe.src = embedUrl + '?autoplay=1&rel=0';
+                    playBtn.classList.add('playing');
+                    playIcon.className = 'fas fa-pause';
+                    isPlaying = true;
+                } else {
+                    alert('Vui lòng cập nhật link nhạc trong menu!');
+                }
+            } else {
+                // Stop
+                iframe.src = '';
+                playBtn.classList.remove('playing');
+                playIcon.className = 'fas fa-play';
+                isPlaying = false;
+            }
+        }
+
+        // Update all
+        function updateAll() {
+            // Update name
+            const newName = document.getElementById('nameInput').value.trim() || 'Duc Anh';
+            document.getElementById('displayName').textContent = newName;
+            
+            // Update avatar if file input has value
+            const fileInput = document.getElementById('avatarUpload');
+            if (fileInput.files.length > 0) {
+                updateAvatar({ target: fileInput });
+            }
+
+            // Update music
+            musicLink = document.getElementById('musicLink').value || '#';
+            musicTitle = document.getElementById('musicTitle').value || 'YouTube Video';
+            musicArtist = document.getElementById('musicArtist').value || 'Artist';
+            
+            document.getElementById('musicDisplayTitle').textContent = musicTitle;
+            document.getElementById('musicDisplayArtist').textContent = musicArtist;
+            
+            embedUrl = getEmbedUrl(musicLink);
+
+            // Update social links
+            const fb = document.getElementById('fbLink').value || '#';
+            const yt = document.getElementById('ytLink').value || '#';
+            const zalo = document.getElementById('zaloLink').value || '#';
+            const tele = document.getElementById('teleLink').value || '#';
+            const discord = document.getElementById('discordLink').value || '#';
+
+            document.getElementById('fbLinkDisplay').href = fb;
+            document.getElementById('ytLinkDisplay').href = yt;
+            document.getElementById('zaloLinkDisplay').href = zalo;
+            document.getElementById('teleLinkDisplay').href = tele;
+            document.getElementById('discordLinkDisplay').href = discord;
+
+            // Reset player if playing
+            if (isPlaying) {
+                document.getElementById('musicIframe').src = '';
+                document.getElementById('playBtn').classList.remove('playing');
+                document.getElementById('playIcon').className = 'fas fa-play';
+                isPlaying = false;
+            }
+
+            // Close menu
+            document.getElementById('menuDropdown').classList.remove('active');
+        }
+
+        // Load initial values
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('nameInput').value = document.getElementById('displayName').textContent;
+            document.getElementById('fbLink').value = document.getElementById('fbLinkDisplay').href;
+            document.getElementById('ytLink').value = document.getElementById('ytLinkDisplay').href;
+            document.getElementById('zaloLink').value = document.getElementById('zaloLinkDisplay').href;
+            document.getElementById('teleLink').value = document.getElementById('teleLinkDisplay').href;
+            document.getElementById('discordLink').value = document.getElementById('discordLinkDisplay').href;
+            
+            // Set initial music
+            embedUrl = getEmbedUrl(musicLink);
+        });
+    </script>
 </body>
 </html>
