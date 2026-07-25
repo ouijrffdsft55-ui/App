@@ -48,14 +48,10 @@
             cursor: pointer;
             transition: 0.2s;
             z-index: 10;
-            display: none;
+            display: flex;
             flex-direction: column;
             gap: 5px;
             padding: 4px;
-        }
-
-        .menu-icon.visible {
-            display: flex;
         }
 
         .menu-icon span {
@@ -165,6 +161,74 @@
 
         .menu-dropdown .social-link-input input {
             flex: 1;
+        }
+
+        /* MyPages section */
+        .mypages-section {
+            margin-top: 1rem;
+            padding: 0.8rem 1rem;
+            background: rgba(74, 108, 247, 0.06);
+            border-radius: 1rem;
+            border: 1px solid rgba(74, 108, 247, 0.12);
+        }
+
+        .mypages-section .mypages-header {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            font-weight: 600;
+            color: #0b1a3a;
+            font-size: 0.95rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .mypages-section .mypages-header i {
+            color: #4a6cf7;
+        }
+
+        .mypages-section .mypages-link-box {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .mypages-section .mypages-link-box input {
+            flex: 1;
+            padding: 0.5rem 0.8rem;
+            border-radius: 0.8rem;
+            border: 1px solid #dce3ed;
+            background: white;
+            font-size: 0.85rem;
+            color: #1f2d5a;
+            cursor: default;
+        }
+
+        .mypages-section .mypages-link-box .copy-btn {
+            background: #4a6cf7;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 0.8rem;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 600;
+            transition: 0.2s;
+            white-space: nowrap;
+        }
+
+        .mypages-section .mypages-link-box .copy-btn:hover {
+            background: #3a5bd9;
+            transform: scale(1.02);
+        }
+
+        .mypages-section .mypages-link-box .copy-btn.copied {
+            background: #22c55e;
+        }
+
+        .mypages-note {
+            font-size: 0.75rem;
+            color: #5a6b8a;
+            margin-top: 0.4rem;
         }
 
         /* Status toggle trong menu */
@@ -324,8 +388,6 @@
             color: #b91c1c;
             border-color: rgba(239, 68, 68, 0.2);
         }
-
-        /* Đã xóa stats-grid */
 
         /* Social links */
         .social-links {
@@ -534,13 +596,19 @@
                 text-align: center;
                 width: 100%;
             }
+            .mypages-section .mypages-link-box {
+                flex-wrap: wrap;
+            }
+            .mypages-section .mypages-link-box .copy-btn {
+                width: 100%;
+            }
         }
     </style>
 </head>
 <body>
     <div class="card">
-        <!-- Menu 3 gạch ngang góc trái - luôn hiển thị cho chủ sở hữu -->
-        <div class="menu-icon visible" id="menuIcon" onclick="toggleMenu()" aria-label="Menu">
+        <!-- Menu 3 gạch ngang góc trái -->
+        <div class="menu-icon" onclick="toggleMenu()" aria-label="Menu">
             <span></span>
             <span></span>
             <span></span>
@@ -588,6 +656,24 @@
             <div class="social-link-input">
                 <i class="fab fa-discord"></i>
                 <input type="url" id="discordLink" placeholder="Link Discord" value="#">
+            </div>
+
+            <!-- MyPages Section -->
+            <label style="margin-top: 1.2rem;"><i class="fas fa-globe"></i> MyPages</label>
+            <div class="mypages-section">
+                <div class="mypages-header">
+                    <i class="fas fa-share-alt"></i>
+                    <span>Chia sẻ trang cá nhân</span>
+                </div>
+                <div class="mypages-link-box">
+                    <input type="text" id="mypagesLink" readonly value="Đang tải...">
+                    <button class="copy-btn" id="copyBtn" onclick="copyLink()">
+                        <i class="fas fa-copy"></i> Sao chép
+                    </button>
+                </div>
+                <div class="mypages-note">
+                    <i class="fas fa-info-circle"></i> Người khác xem sẽ không thấy menu 3 gạch
+                </div>
             </div>
             
             <button class="btn-update" onclick="updateAll()"><i class="fas fa-save"></i> Cập nhật & Lưu</button>
@@ -688,6 +774,42 @@
 
         function saveData() {
             localStorage.setItem('userProfileData', JSON.stringify(userData));
+            updateMypagesLink();
+        }
+
+        // Cập nhật link MyPages
+        function updateMypagesLink() {
+            const currentUrl = window.location.href.split('?')[0];
+            document.getElementById('mypagesLink').value = currentUrl;
+        }
+
+        // Sao chép link
+        function copyLink() {
+            const linkInput = document.getElementById('mypagesLink');
+            const copyBtn = document.getElementById('copyBtn');
+            
+            linkInput.select();
+            linkInput.setSelectionRange(0, 99999);
+            
+            try {
+                navigator.clipboard.writeText(linkInput.value).then(() => {
+                    copyBtn.innerHTML = '<i class="fas fa-check"></i> Đã sao chép!';
+                    copyBtn.classList.add('copied');
+                    setTimeout(() => {
+                        copyBtn.innerHTML = '<i class="fas fa-copy"></i> Sao chép';
+                        copyBtn.classList.remove('copied');
+                    }, 2000);
+                });
+            } catch(err) {
+                // Fallback
+                document.execCommand('copy');
+                copyBtn.innerHTML = '<i class="fas fa-check"></i> Đã sao chép!';
+                copyBtn.classList.add('copied');
+                setTimeout(() => {
+                    copyBtn.innerHTML = '<i class="fas fa-copy"></i> Sao chép';
+                    copyBtn.classList.remove('copied');
+                }, 2000);
+            }
         }
 
         // Áp dụng dữ liệu lên giao diện
@@ -742,6 +864,8 @@
             document.getElementById('zaloLinkDisplay').href = data.zalo || '#';
             document.getElementById('teleLinkDisplay').href = data.tele || '#';
             document.getElementById('discordLinkDisplay').href = data.discord || '#';
+
+            updateMypagesLink();
         }
 
         // Toggle menu
@@ -864,48 +988,4 @@
             const yt = document.getElementById('ytLink').value || '#';
             const zalo = document.getElementById('zaloLink').value || '#';
             const tele = document.getElementById('teleLink').value || '#';
-            const discord = document.getElementById('discordLink').value || '#';
-
-            userData.fb = fb;
-            userData.yt = yt;
-            userData.zalo = zalo;
-            userData.tele = tele;
-            userData.discord = discord;
-
-            document.getElementById('fbLinkDisplay').href = fb;
-            document.getElementById('ytLinkDisplay').href = yt;
-            document.getElementById('zaloLinkDisplay').href = zalo;
-            document.getElementById('teleLinkDisplay').href = tele;
-            document.getElementById('discordLinkDisplay').href = discord;
-
-            // Reset player if playing
-            if (isPlaying) {
-                document.getElementById('musicIframe').src = '';
-                document.getElementById('playBtn').classList.remove('playing');
-                document.getElementById('playIcon').className = 'fas fa-play';
-                isPlaying = false;
-            }
-
-            // Lưu tất cả dữ liệu
-            saveData();
-
-            // Close menu
-            document.getElementById('menuDropdown').classList.remove('active');
-        }
-
-        // Load data khi trang load
-        document.addEventListener('DOMContentLoaded', function() {
-            applyData();
-            
-            // Set initial music embed
-            embedUrl = getEmbedUrl(userData.musicLink || '');
-            
-            // Đồng bộ trạng thái online
-            isOnline = userData.status === 'online';
-        });
-
-        // Menu 3 gạch luôn hiển thị cho chủ sở hữu
-        // (không cần điều kiện gì thêm)
-    </script>
-</body>
-</html>
+            const
