@@ -1,45 +1,156 @@
 <!DOCTYPE html>
-<html>
+<html lang="vi">
 <head>
-    <title>Telegram Spam</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Telegram Bot</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #0e0e0e;
+            color: #e0e0e0;
+            border-radius: 12px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.8);
+        }
+        h1 { color: #0088cc; text-align: center; border-bottom: 1px solid #333; padding-bottom: 10px; }
+        label { display: block; margin-top: 15px; font-weight: bold; color: #aaa; }
+        input, textarea {
+            width: 100%;
+            padding: 10px;
+            margin-top: 5px;
+            background: #1e1e1e;
+            border: 1px solid #333;
+            color: #fff;
+            border-radius: 6px;
+            box-sizing: border-box;
+        }
+        textarea { height: 80px; resize: vertical; }
+        .btn {
+            width: 100%;
+            padding: 12px;
+            margin-top: 20px;
+            background: #0088cc;
+            border: none;
+            color: #fff;
+            font-size: 18px;
+            font-weight: bold;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        .btn:hover { background: #006699; }
+        .btn:disabled { background: #444; cursor: not-allowed; }
+        #log {
+            margin-top: 15px;
+            padding: 10px;
+            background: #1a1a1a;
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 14px;
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid #333;
+            white-space: pre-wrap;
+        }
+        .status-ok { color: #4caf50; }
+        .status-err { color: #f44336; }
+        .note { font-size: 12px; color: #888; margin-top: 5px; }
+    </style>
 </head>
 <body>
-    <input type="text" id="token" placeholder="Bot Token" value="123456:ABC-DEF">
-    <input type="text" id="chat_id" placeholder="Chat ID hoặc @username" value="@target">
-    <textarea id="message" placeholder="Nội dung spam">Spam!</textarea>
-    <button onclick="spam()">Gửi spam</button>
-    <div id="log"></div>
+
+    <h1>📨 Test Telegram Bot</h1>
+
+    <label>Bot Token:</label>
+    <input type="text" id="token" value="8897257419:AAHzKmBnnsG-BUaMlob-TPFoI" placeholder="Nhập token bot">
+
+    <label>Group / Channel ID:</label>
+    <input type="text" id="chat_id" value="-1004345734060" placeholder="Ví dụ: -100xxxxxxxxxx">
+    <div class="note">⚠️ Chat ID nhóm thường bắt đầu bằng dấu trừ (-100...)</div>
+
+    <label>Nội dung tin nhắn:</label>
+    <textarea id="message" placeholder="Nhập nội dung spam...">hihi @MrPewiOS</textarea>
+
+    <button class="btn" id="sendBtn" onclick="startSpam()">🚀 Gửi Tin Nhắn</button>
+    <button class="btn" style="background:#555; margin-top:5px;" onclick="stopSpam()">⏹ Dừng</button>
+
+    <div id="log">📋 Sẵn sàng...</div>
+
     <script>
-        function spam() {
-            const token = document.getElementById('token').value;
-            const chat_id = document.getElementById('chat_id').value;
-            const msg = document.getElementById('message').value;
+        let spamInterval = null;
+        let count = 0;
+        let isRunning = false;
+
+        function startSpam() {
+            if (isRunning) return;
+            const token = document.getElementById('token').value.trim();
+            const chat_id = document.getElementById('chat_id').value.trim();
+            const message = document.getElementById('message').value.trim();
+
+            if (!token || !chat_id || !message) {
+                document.getElementById('log').innerHTML = '<span class="status-err">❌ Vui lòng điền đầy đủ thông tin!</span>';
+                return;
+            }
+
+            isRunning = true;
+            count = 0;
+            document.getElementById('sendBtn').disabled = true;
             const log = document.getElementById('log');
+            log.innerHTML = '⏳ Đang gửi...';
+
             const url = `https://api.telegram.org/bot${token}/sendMessage`;
-            const data = { chat_id: chat_id, text: msg };
-            let count = 0;
-            const interval = setInterval(() => {
+
+            spamInterval = setInterval(() => {
+                const payload = {
+                    chat_id: chat_id,
+                    text: message + ` [${count+1}]`
+                };
+
                 fetch(url, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(data)
+                    body: JSON.stringify(payload)
                 })
                 .then(res => res.json())
-                .then(json => {
+                .then(data => {
                     count++;
-                    log.innerHTML = `Đã gửi: ${count} tin nhắn`;
-                    if (!json.ok) {
-                        clearInterval(interval);
-                        log.innerHTML += `\nLỗi: ${json.description}`;
+                    if (data.ok) {
+                        log.innerHTML = `<span class="status-ok">✅ Đã gửi: ${count} tin nhắn</span>\n` + log.innerHTML;
+                        if (log.children.length > 50) log.removeChild(log.lastChild);
+                    } else {
+                        log.innerHTML = `<span class="status-err">❌ Lỗi: ${data.description}</span>\n` + log.innerHTML;
+                        stopSpam();
                     }
                 })
                 .catch(err => {
-                    clearInterval(interval);
-                    log.innerHTML += `\nLỗi kết nối: ${err}`;
+                    log.innerHTML = `<span class="status-err">⚠️ Lỗi kết nối: ${err}</span>\n` + log.innerHTML;
+                    stopSpam();
                 });
-            }, 100); // 10 tin nhắn/giây (giới hạn 30/s, nên để 200ms để an toàn)
-            setTimeout(() => clearInterval(interval), 30000); // tự động dừng sau 30s
+            }, 200); // 200ms = 5 tin/giây (an toàn, tránh rate limit)
         }
+
+        function stopSpam() {
+            if (spamInterval) {
+                clearInterval(spamInterval);
+                spamInterval = null;
+            }
+            isRunning = false;
+            document.getElementById('sendBtn').disabled = false;
+            const log = document.getElementById('log');
+            log.innerHTML = `⏹ Đã dừng. Tổng đã gửi: ${count} tin nhắn\n` + log.innerHTML;
+        }
+
+        // Tự động điền dữ liệu từ file (nếu có)
+        window.onload = function() {
+            // Dữ liệu đã được điền sẵn từ file IMG_0383.webp
+            document.getElementById('token').value = '8897257419:AAHzKmBnnsG-BUaMlob-TPFoI';
+            document.getElementById('chat_id').value = '-1004345734060';
+            document.getElementById('message').value = 'hihi @MrPewiOS';
+            document.getElementById('log').innerHTML = '📋 Đã nạp cấu hình từ file. Nhấn "Gửi Tin Nhắn" để bắt đầu spam.';
+        };
     </script>
+
 </body>
 </html>
