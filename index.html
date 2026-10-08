@@ -1,805 +1,392 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Nguyễn Đức Anh · Profile</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-
-    body {
-      font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: radial-gradient(circle at 20% 20%, #0f172a, #020617 80%);
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 1.5rem;
-      line-height: 1.5;
-      color: #e2e8f0;
-      overflow-x: hidden;
-    }
-
-    /* ========== WELCOME SCREEN ========== */
-    .welcome-screen {
-      position: fixed;
-      inset: 0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      background: radial-gradient(circle at 50% 40%, #0f172a 0%, #020617 70%);
-      z-index: 999;
-      transition: opacity 0.9s ease, visibility 0.9s ease, transform 0.9s ease;
-      padding: 2rem;
-      overflow: hidden;
-    }
-
-    .welcome-screen.hidden {
-      opacity: 0; visibility: hidden; transform: scale(1.1); pointer-events: none;
-    }
-
-    .welcome-screen::before {
-      content: '';
-      position: absolute;
-      width: 600px; height: 600px;
-      border-radius: 50%;
-      background: radial-gradient(circle, rgba(56, 189, 248, 0.18) 0%, transparent 70%);
-      top: 50%; left: 50%;
-      transform: translate(-50%, -50%);
-      animation: pulse-glow 4s ease-in-out infinite;
-      pointer-events: none;
-    }
-
-    .welcome-screen::after {
-      content: '';
-      position: absolute;
-      width: 400px; height: 400px;
-      border-radius: 50%;
-      background: radial-gradient(circle, rgba(251, 191, 36, 0.1) 0%, transparent 70%);
-      top: 30%; right: 15%;
-      animation: pulse-glow 5s ease-in-out infinite reverse;
-      pointer-events: none;
-    }
-
-    @keyframes pulse-glow {
-      0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.7; }
-      50% { transform: translate(-50%, -50%) scale(1.25); opacity: 1; }
-    }
-
-    .particle {
-      position: absolute;
-      width: 3px; height: 3px;
-      background: #38bdf8;
-      border-radius: 50%;
-      box-shadow: 0 0 10px #38bdf8, 0 0 20px #38bdf8;
-      animation: float-particle linear infinite;
-      pointer-events: none;
-    }
-
-    @keyframes float-particle {
-      0% { transform: translateY(100vh) translateX(0); opacity: 0; }
-      10% { opacity: 1; }
-      90% { opacity: 1; }
-      100% { transform: translateY(-10vh) translateX(50px); opacity: 0; }
-    }
-
-    .welcome-content {
-      position: relative;
-      z-index: 2;
-      text-align: center;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 1.5rem;
-    }
-
-    .welcome-avatar {
-      width: 130px; height: 130px;
-      border-radius: 50%;
-      padding: 4px;
-      background: linear-gradient(135deg, #38bdf8, #fbbf24, #0ea5e9);
-      box-shadow: 0 0 40px -5px #38bdf8cc, 0 0 80px -10px #38bdf855;
-      animation: avatar-float 4s ease-in-out infinite;
-      margin-bottom: 0.5rem;
-    }
-
-    @keyframes avatar-float {
-      0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(-12px); }
-    }
-
-    .welcome-avatar img {
-      width: 100%; height: 100%;
-      object-fit: cover;
-      border-radius: 50%;
-      border: 3px solid #020617;
-    }
-
-    .welcome-name {
-      font-size: 1.6rem;
-      font-weight: 700;
-      color: #ffffff;
-      letter-spacing: 0.5px;
-      text-shadow: 0 0 15px #38bdf8aa, 0 0 40px #38bdf866;
-    }
-
-    .welcome-name i {
-      color: #38bdf8;
-      font-size: 1.2rem;
-      margin-left: 0.4rem;
-      filter: drop-shadow(0 0 8px #38bdf8cc);
-    }
-
-    .click-here-btn {
-      position: relative;
-      margin-top: 1.5rem;
-      padding: 1.2rem 3.5rem;
-      font-size: 1.6rem;
-      font-weight: 800;
-      letter-spacing: 4px;
-      text-transform: uppercase;
-      color: #ffffff;
-      background: transparent;
-      border: 2px solid #38bdf8;
-      border-radius: 60px;
-      cursor: pointer;
-      overflow: hidden;
-      transition: all 0.4s cubic-bezier(0.2, 0.9, 0.3, 1);
-      text-shadow: 0 0 10px #38bdf8cc, 0 0 30px #38bdf888, 0 0 60px #38bdf855;
-      box-shadow: 0 0 25px -5px #38bdf8cc, 0 0 60px -15px #38bdf8aa, inset 0 0 25px -10px #38bdf8aa;
-      animation: btn-pulse 2.5s ease-in-out infinite;
-      font-family: inherit;
-    }
-
-    @keyframes btn-pulse {
-      0%, 100% { box-shadow: 0 0 25px -5px #38bdf8cc, 0 0 60px -15px #38bdf8aa, inset 0 0 25px -10px #38bdf8aa; }
-      50% { box-shadow: 0 0 45px -5px #38bdf8ff, 0 0 90px -15px #38bdf8cc, inset 0 0 35px -10px #38bdf8cc; }
-    }
-
-    .click-here-btn::before {
-      content: '';
-      position: absolute;
-      top: 0; left: -100%;
-      width: 100%; height: 100%;
-      background: linear-gradient(90deg, transparent, #38bdf8aa, #fbbf24aa, transparent);
-      transition: left 0.7s ease;
-    }
-
-    .click-here-btn:hover {
-      color: #020617;
-      background: #38bdf8;
-      border-color: #7dd3fc;
-      text-shadow: none;
-      transform: scale(1.06) translateY(-3px);
-      box-shadow: 0 0 60px -5px #38bdf8ff, 0 0 120px -20px #38bdf8cc, 0 20px 50px -15px #38bdf8aa;
-    }
-
-    .click-here-btn:hover::before { left: 100%; }
-    .click-here-btn:active { transform: scale(0.98); }
-
-    .scroll-hint {
-      margin-top: 1rem;
-      font-size: 0.85rem;
-      color: #64748b;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      animation: hint-blink 2s ease-in-out infinite;
-      text-shadow: 0 0 10px #38bdf866;
-    }
-
-    @keyframes hint-blink {
-      0%, 100% { opacity: 0.4; }
-      50% { opacity: 1; }
-    }
-
-    /* ========== PROFILE CARD ========== */
-    .profile-card {
-      max-width: 620px;
-      width: 100%;
-      background: rgba(15, 23, 42, 0.85);
-      backdrop-filter: blur(14px);
-      -webkit-backdrop-filter: blur(14px);
-      border-radius: 3rem;
-      box-shadow: 0 30px 60px -20px #00000080, 0 0 0 1px rgba(56, 189, 248, 0.15) inset, 0 0 80px -20px #38bdf833;
-      overflow: hidden;
-      opacity: 0;
-      visibility: hidden;
-      transform: scale(0.95);
-      transition: opacity 0.8s ease, visibility 0.8s ease, transform 0.8s ease;
-    }
-
-    .profile-card.visible {
-      opacity: 1; visibility: visible; transform: scale(1);
-    }
-
-    /* Profile content - dạng 1 cột */
-    .profile-content {
-      padding: 2.5rem 2rem;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      text-align: center;
-      background: linear-gradient(160deg, #020617 0%, #0f172a 100%);
-      position: relative;
-      isolation: isolate;
-    }
-
-    .profile-content::after {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: radial-gradient(circle at 20% 30%, rgba(56, 189, 248, 0.12), transparent 70%),
-                  radial-gradient(circle at 80% 80%, rgba(251, 191, 36, 0.08), transparent 70%);
-      z-index: -1;
-    }
-
-    .avatar-frame {
-      width: 160px; height: 160px;
-      border-radius: 50%;
-      padding: 5px;
-      background: linear-gradient(135deg, #38bdf8, #0ea5e9, #fbbf24);
-      box-shadow: 0 15px 30px -8px #00000080, 0 0 30px -5px #38bdf8aa;
-      margin-bottom: 1.5rem;
-      transition: transform 0.3s ease, box-shadow 0.3s ease;
-    }
-
-    .avatar-frame:hover {
-      transform: scale(1.03);
-      box-shadow: 0 20px 40px -8px #000000aa, 0 0 45px -5px #38bdf8cc;
-    }
-
-    .avatar-frame img {
-      width: 100%; height: 100%;
-      object-fit: cover;
-      border-radius: 50%;
-      display: block;
-      border: 3px solid #020617;
-      background: #0f172a;
-    }
-
-    .name-row {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0.5rem;
-      margin-bottom: 0.4rem;
-    }
-
-    .profile-content h1 {
-      font-size: 2rem;
-      font-weight: 700;
-      letter-spacing: -0.02em;
-      color: #ffffff;
-      text-shadow: 0 0 12px #38bdf8aa, 0 0 30px #38bdf855, 0 2px 5px #000000;
-    }
-
-    .verified-badge {
-      color: #38bdf8;
-      font-size: 1.5rem;
-      filter: drop-shadow(0 0 6px #38bdf8cc) drop-shadow(0 0 12px #38bdf888);
-      animation: glow-pulse 2.5s ease-in-out infinite;
-    }
-
-    @keyframes glow-pulse {
-      0%, 100% { filter: drop-shadow(0 0 6px #38bdf8cc) drop-shadow(0 0 12px #38bdf888); }
-      50% { filter: drop-shadow(0 0 10px #38bdf8ff) drop-shadow(0 0 20px #38bdf8cc); }
-    }
-
-    .profile-title {
-      font-size: 1rem;
-      font-weight: 600;
-      color: #7dd3fc;
-      background: rgba(56, 189, 248, 0.08);
-      padding: 0.4rem 1.4rem;
-      border-radius: 40px;
-      display: inline-block;
-      margin-bottom: 0.6rem;
-      backdrop-filter: blur(5px);
-      border: 1px solid rgba(56, 189, 248, 0.35);
-      letter-spacing: 0.5px;
-      text-shadow: 0 0 8px #38bdf8aa, 0 0 20px #38bdf855;
-      box-shadow: 0 0 20px -5px #38bdf866;
-    }
-
-    .location-text {
-      font-size: 0.9rem;
-      color: #94a3b8;
-      margin-bottom: 1.5rem;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0.4rem;
-      text-shadow: 0 0 8px #38bdf866;
-    }
-
-    .location-text i {
-      color: #fbbf24;
-      text-shadow: 0 0 8px #fbbf24cc;
-    }
-
-    /* Divider */
-    .divider {
-      width: 100%;
-      height: 1px;
-      background: linear-gradient(90deg, transparent, rgba(56, 189, 248, 0.3), transparent);
-      margin: 1.8rem 0;
-    }
-
-    /* Section header */
-    .section-header {
-      display: flex;
-      align-items: center;
-      gap: 0.6rem;
-      font-size: 0.9rem;
-      font-weight: 700;
-      color: #94a3b8;
-      text-transform: uppercase;
-      letter-spacing: 2px;
-      text-shadow: 0 0 10px #38bdf866;
-      margin-bottom: 0.9rem;
-      font-family: 'Courier New', monospace;
-      width: 100%;
-      justify-content: flex-start;
-    }
-
-    .section-header i {
-      color: #38bdf8;
-      font-size: 1.1rem;
-      text-shadow: 0 0 10px #38bdf8cc;
-    }
-
-    /* Vibe cards */
-    .vibe-list {
-      display: flex;
-      flex-direction: column;
-      gap: 0.8rem;
-      width: 100%;
-    }
-
-    .vibe-item {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-      background: rgba(30, 41, 59, 0.6);
-      padding: 1rem 1.2rem;
-      border-radius: 1.2rem;
-      border: 1px solid rgba(56, 189, 248, 0.12);
-      transition: all 0.25s;
-      backdrop-filter: blur(4px);
-    }
-
-    .vibe-item:hover {
-      background: rgba(30, 41, 59, 0.85);
-      border-color: rgba(56, 189, 248, 0.4);
-      transform: translateX(5px);
-      box-shadow: 0 8px 25px -10px #38bdf866;
-    }
-
-    .vibe-icon {
-      width: 48px; height: 48px;
-      border-radius: 14px;
-      background: rgba(56, 189, 248, 0.1);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.4rem;
-      color: #38bdf8;
-      border: 1px solid rgba(56, 189, 248, 0.25);
-      box-shadow: 0 0 15px -5px #38bdf866;
-      flex-shrink: 0;
-      text-shadow: 0 0 10px #38bdf8cc;
-    }
-
-    .vibe-content { text-align: left; }
-
-    .vibe-content h3 {
-      font-size: 1.1rem;
-      font-weight: 700;
-      color: #ffffff;
-      margin-bottom: 0.15rem;
-      text-shadow: 0 0 10px #38bdf888;
-      letter-spacing: 0.3px;
-    }
-
-    .vibe-content p {
-      font-size: 0.85rem;
-      color: #94a3b8;
-      font-family: 'Courier New', monospace;
-      text-shadow: 0 0 8px #38bdf866;
-      letter-spacing: 0.5px;
-    }
-
-    /* Discord server card */
-    .discord-card {
-      background: #1e293b;
-      border-radius: 1.2rem;
-      overflow: hidden;
-      border: 1px solid rgba(56, 189, 248, 0.15);
-      box-shadow: 0 10px 30px -15px #000000aa;
-      transition: all 0.3s;
-      width: 100%;
-    }
-
-    .discord-card:hover {
-      border-color: rgba(56, 189, 248, 0.4);
-      box-shadow: 0 15px 40px -15px #38bdf866;
-    }
-
-    .discord-banner {
-      height: 90px;
-      background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
-      position: relative;
-      overflow: hidden;
-      display: flex;
-      align-items: flex-end;
-      padding: 0.8rem 1rem;
-    }
-
-    .discord-banner::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: 
-        radial-gradient(circle at 20% 30%, rgba(56, 189, 248, 0.15), transparent 50%),
-        radial-gradient(circle at 80% 70%, rgba(251, 191, 36, 0.08), transparent 50%);
-    }
-
-    .discord-banner::after {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background-image: 
-        linear-gradient(90deg, transparent 49%, rgba(56, 189, 248, 0.08) 50%, transparent 51%),
-        linear-gradient(0deg, transparent 49%, rgba(56, 189, 248, 0.08) 50%, transparent 51%);
-      background-size: 20px 20px;
-      opacity: 0.5;
-    }
-
-    .discord-server-name {
-      position: relative;
-      z-index: 1;
-      font-size: 1.1rem;
-      font-weight: 700;
-      color: #ffffff;
-      text-shadow: 0 2px 10px #000000cc, 0 0 20px #38bdf8aa;
-      letter-spacing: 0.3px;
-    }
-
-    .discord-badge {
-      position: relative;
-      z-index: 1;
-      font-size: 0.65rem;
-      background: rgba(56, 189, 248, 0.2);
-      color: #7dd3fc;
-      padding: 0.15rem 0.6rem;
-      border-radius: 20px;
-      border: 1px solid rgba(56, 189, 248, 0.4);
-      margin-left: 0.5rem;
-      font-weight: 600;
-      letter-spacing: 1px;
-      text-transform: uppercase;
-      text-shadow: 0 0 8px #38bdf8cc;
-    }
-
-    .discord-body {
-      padding: 1rem 1.2rem 1.2rem;
-    }
-
-    .discord-server-info {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-      margin-bottom: 0.8rem;
-    }
-
-    .discord-server-icon {
-      width: 60px; height: 60px;
-      border-radius: 16px;
-      background: linear-gradient(135deg, #0ea5e9, #38bdf8);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.8rem;
-      color: #ffffff;
-      border: 2px solid rgba(56, 189, 248, 0.4);
-      box-shadow: 0 0 20px -5px #38bdf8aa;
-      flex-shrink: 0;
-    }
-
-    .discord-stats {
-      display: flex;
-      flex-direction: column;
-      gap: 0.3rem;
-      text-align: left;
-    }
-
-    .discord-members-row {
-      display: flex;
-      align-items: center;
-      gap: 0.4rem;
-      font-size: 0.85rem;
-      color: #94a3b8;
-    }
-
-    .member-dot {
-      width: 10px; height: 10px;
-      border-radius: 50%;
-      background: #38bdf8;
-      box-shadow: 0 0 10px #38bdf8, 0 0 20px #38bdf888;
-      animation: online-pulse 2s ease-in-out infinite;
-    }
-
-    @keyframes online-pulse {
-      0%, 100% { box-shadow: 0 0 8px #38bdf8, 0 0 16px #38bdf888; }
-      50% { box-shadow: 0 0 14px #38bdf8, 0 0 28px #38bdf8cc; }
-    }
-
-    .discord-members-row strong {
-      color: #38bdf8;
-      font-weight: 600;
-      text-shadow: 0 0 8px #38bdf888;
-    }
-
-    .discord-name {
-      font-size: 1.1rem;
-      font-weight: 700;
-      color: #ffffff;
-      margin-bottom: 0.4rem;
-      text-shadow: 0 0 10px #38bdf888;
-      text-align: left;
-    }
-
-    .discord-desc {
-      font-size: 0.85rem;
-      color: #94a3b8;
-      line-height: 1.5;
-      margin-bottom: 1rem;
-      text-shadow: 0 0 8px #38bdf866;
-      text-align: left;
-    }
-
-    .discord-join-btn {
-      width: 100%;
-      padding: 0.9rem;
-      background: #ffffff;
-      color: #020617;
-      border: none;
-      border-radius: 40px;
-      font-weight: 700;
-      font-size: 0.95rem;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0.5rem;
-      transition: all 0.3s;
-      text-decoration: none;
-      box-shadow: 0 5px 20px -8px #ffffff66;
-      letter-spacing: 0.3px;
-      font-family: inherit;
-    }
-
-    .discord-join-btn:hover {
-      background: #38bdf8;
-      color: #020617;
-      box-shadow: 0 0 30px -5px #38bdf8cc, 0 10px 25px -10px #38bdf8aa;
-      transform: scale(1.02);
-    }
-
-    .discord-join-btn i { font-size: 1.2rem; }
-
-    /* Responsive */
-    @media (max-width: 800px) {
-      body { padding: 1rem; }
-
-      .profile-card { border-radius: 2.5rem; }
-
-      .profile-content { padding: 2rem 1.5rem; }
-
-      .avatar-frame { width: 140px; height: 140px; }
-
-      .profile-content h1 { font-size: 1.8rem; }
-
-      .verified-badge { font-size: 1.3rem; }
-
-      .click-here-btn {
-        font-size: 1.2rem;
-        padding: 1rem 2.5rem;
-        letter-spacing: 3px;
-      }
-
-      .welcome-avatar { width: 110px; height: 110px; }
-      .welcome-name { font-size: 1.3rem; }
-    }
-
-    @media (max-width: 480px) {
-      .click-here-btn {
-        font-size: 1rem;
-        padding: 0.9rem 2rem;
-        letter-spacing: 2px;
-      }
-
-      .section-header { font-size: 0.8rem; letter-spacing: 1.5px; }
-
-      .vibe-item { padding: 0.8rem; }
-
-      .vibe-icon { width: 42px; height: 42px; font-size: 1.2rem; }
-
-      .discord-server-icon { width: 50px; height: 50px; font-size: 1.5rem; }
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>FF Hack Panel</title>
+    <style>
+        :root {
+            --bg-color: #0f1016;
+            --card-bg: #181922;
+            --border-color: #2a2b38;
+            --accent-color: #ff5500;
+            --text-main: #ffffff;
+            --text-sub: #8e8f99;
+        }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            padding: 16px;
+            display: flex;
+            justify-content: center;
+        }
+        .container {
+            width: 100%;
+            max-width: 400px;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 13px;
+            color: var(--text-sub);
+            letter-spacing: 1px;
+        }
+        .nav-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .btn {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        .user-badge {
+            background: #1e1f30;
+            color: #4da6ff;
+            border: 1px solid #2d4f7c;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-weight: 600;
+        }
+        .timer-box {
+            background: linear-gradient(135deg, #261911, #181922);
+            border: 1px solid #ff550055;
+            border-radius: 12px;
+            padding: 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        .timer-title {
+            color: var(--accent-color);
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+        .timer-value {
+            font-size: 16px;
+            font-weight: 700;
+            color: #ffaa80;
+        }
+        .game-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .game-card:active {
+            border-color: var(--accent-color);
+        }
+        .game-info h3 {
+            font-size: 16px;
+            margin-bottom: 4px;
+        }
+        .game-info p {
+            font-size: 12px;
+            color: var(--text-sub);
+        }
+        .status-online {
+            background: #0f2b1d;
+            color: #2ecc71;
+            border: 1px solid #1e5631;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+        }
+        .tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+        .tab-btn {
+            flex: 1;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 12px;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 13px;
+            text-align: center;
+            cursor: pointer;
+        }
+        .tab-btn.active {
+            background: linear-gradient(135deg, #ff5500, #ff7b00);
+            border-color: #ff9944;
+        }
+        .panel-section {
+            display: none;
+        }
+        .panel-section.active {
+            display: block;
+        }
+        .setting-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 14px;
+            margin-bottom: 12px;
+        }
+        .setting-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+        }
+        .setting-title {
+            font-size: 14px;
+            font-weight: 600;
+        }
+        .setting-desc {
+            font-size: 11px;
+            color: var(--text-sub);
+        }
+        /* Toggle Switch */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 44px;
+            height: 24px;
+        }
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #2a2b38;
+            transition: .3s;
+            border-radius: 24px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .3s;
+            border-radius: 50%;
+        }
+        input:checked + .slider {
+            background-color: var(--accent-color);
+        }
+        input:checked + .slider:before {
+            transform: translateX(20px);
+        }
+        .inject-btn {
+            width: 100%;
+            background: linear-gradient(90deg, #ff5500, #ff8800);
+            color: white;
+            border: none;
+            padding: 14px;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            cursor: pointer;
+            margin-top: 16px;
+            box-shadow: 0 4px 15px rgba(255,85,0,0.4);
+        }
+        .status-bar {
+            text-align: center;
+            background: #13141c;
+            border: 1px solid var(--border-color);
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 12px;
+            color: var(--text-sub);
+            margin-top: 10px;
+        }
+        .footer-note {
+            text-align: center;
+            font-size: 10px;
+            color: #555661;
+            margin-top: 20px;
+        }
+    </style>
 </head>
 <body>
 
-  <!-- ========== WELCOME SCREEN ========== -->
-  <div class="welcome-screen" id="welcomeScreen">
-    <div class="welcome-content">
-      <div class="welcome-avatar">
-        <img 
-          src="https://dsft55-ui.github.io/avatar.jpg" 
-          alt="Avatar Nguyễn Đức Anh"
-          onerror="this.src='https://ui-avatars.com/api/?name=Nguyen+Duc+Anh&size=200&background=0ea5e9&color=fff&bold=true'"
-        >
-      </div>
-      <div class="welcome-name">
-        Nguyễn Đức Anh <i class="fas fa-check-circle"></i>
-      </div>
-      <button class="click-here-btn" id="clickHereBtn">
-        Click Here
-      </button>
-      <div class="scroll-hint">
-        <i class="fas fa-arrow-down" style="margin-right: 0.4rem;"></i> Nhấn để xem trang cá nhân
-      </div>
+<div class="container">
+    <div class="header">Free Fire & Free Fire Max</div>
+    
+    <div class="nav-bar">
+        <button class="btn" onclick="goHome()">← Logout</button>
+        <div class="user-badge" id="username-display">Nduc</div>
     </div>
-  </div>
 
-  <!-- ========== PROFILE CARD ========== -->
-  <div class="profile-card" id="profileCard">
-    <div class="profile-content">
-      <!-- Avatar -->
-      <div class="avatar-frame">
-        <img 
-          src="https://dsft55-ui.github.io/avatar.jpg" 
-          alt="Avatar Nguyễn Đức Anh"
-          onerror="this.src='https://ui-avatars.com/api/?name=Nguyen+Duc+Anh&size=200&background=0ea5e9&color=fff&bold=true'"
-        >
-      </div>
+    <div class="timer-box">
+        <span class="timer-title">⏱ THỜI GIAN CÒN LẠI</span>
+        <span class="timer-value" id="countdown">59m 54s</span>
+    </div>
 
-      <!-- Tên + tích xanh -->
-      <div class="name-row">
-        <h1>Nguyễn Đức Anh</h1>
-        <i class="fas fa-check-circle verified-badge" title="Đã xác minh"></i>
-      </div>
-
-      <!-- Chức danh -->
-      <div class="profile-title">
-        <i class="fas fa-gamepad" style="margin-right: 0.3rem;"></i> Gamer - Dev
-      </div>
-
-      <!-- Địa điểm -->
-      <div class="location-text">
-        <i class="fas fa-map-pin"></i> Hà Nam - Việt Nam
-      </div>
-
-      <!-- Divider -->
-      <div class="divider"></div>
-
-      <!-- MY VIBES & HOBBIES -->
-      <div style="width: 100%;">
-        <div class="section-header">
-          <i class="fas fa-code"></i> MY VIBES &amp; HOBBIES
+    <!-- HOME VIEW -->
+    <div id="home-view">
+        <div class="game-card" onclick="selectGame('Free Fire')">
+            <div class="game-info">
+                <h3>🔥 Free Fire</h3>
+                <p>Garena Free Fire (Mobile)</p>
+            </div>
+            <span class="status-online">ONLINE</span>
         </div>
-        <div class="vibe-list">
-          <div class="vibe-item">
-            <div class="vibe-icon">
-              <i class="fas fa-gamepad"></i>
-            </div>
-            <div class="vibe-content">
-              <h3>Gaming</h3>
-              <p>FreeFire · Roblox</p>
-            </div>
-          </div>
 
-          <div class="vibe-item">
-            <div class="vibe-icon">
-              <i class="fas fa-terminal"></i>
+        <div class="game-card" onclick="selectGame('Free Fire Max')">
+            <div class="game-info">
+                <h3>💥 Free Fire Max</h3>
+                <p>Garena Free Fire Max (HD)</p>
             </div>
-            <div class="vibe-content">
-              <h3>Scrip</h3>
-              <p>Html · Js · Py</p>
-            </div>
-          </div>
+            <span class="status-online">ONLINE</span>
         </div>
-      </div>
+    </div>
 
-      <!-- Divider -->
-      <div class="divider"></div>
-
-      <!-- DISCORD SERVER -->
-      <div style="width: 100%;">
-        <div class="section-header">
-          <i class="fas fa-server"></i> AFFILIATED DISCORD SERVER
+    <!-- PANEL VIEW -->
+    <div id="panel-view" style="display: none;">
+        <div class="tabs">
+            <div class="tab-btn active" onclick="switchTab('aimbot')">AIMBOT</div>
+            <div class="tab-btn" onclick="switchTab('esp')">ESP</div>
+            <div class="tab-btn" onclick="switchTab('misc')">MISC</div>
         </div>
-        <div class="discord-card">
-          <div class="discord-banner">
-            <span class="discord-server-name">Nduc Community</span>
-            <span class="discord-badge">COMMUNITY</span>
-          </div>
-          <div class="discord-body">
-            <div class="discord-server-info">
-              <div class="discord-server-icon">
-                <i class="fas fa-mug-hot"></i>
-              </div>
-              <div class="discord-stats">
-                <div class="discord-members-row">
-                  <span class="member-dot"></span>
-                  <strong>78 Members</strong>
+
+        <!-- AIMBOT TAB -->
+        <div id="tab-aimbot" class="panel-section active">
+            <div class="setting-card">
+                <div class="setting-header">
+                    <span class="setting-title">Aimbot</span>
+                    <label class="switch"><input type="checkbox"><span class="slider"></span></label>
                 </div>
-              </div>
+                <div class="setting-desc">Auto-aim at nearest enemy</div>
             </div>
-            <div class="discord-name">Nduc Community</div>
-            <div class="discord-desc">
-              Cộng đồng Discord chính thức của Nduc — nơi giao lưu, chia sẻ và kết nối.
+            <div class="setting-card">
+                <div class="setting-header">
+                    <span class="setting-title">Skip Bot</span>
+                    <label class="switch"><input type="checkbox"><span class="slider"></span></label>
+                </div>
+                <div class="setting-desc">Bỏ qua bot khi aim</div>
             </div>
-            <a href="https://discord.gg/9Y5h4j6Pb" target="_blank" class="discord-join-btn">
-              <i class="fab fa-discord"></i> Join
-            </a>
-          </div>
+            <div class="setting-card">
+                <div class="setting-header">
+                    <span class="setting-title">Skip Knocked</span>
+                    <label class="switch"><input type="checkbox"><span class="slider"></span></label>
+                </div>
+                <div class="setting-desc">Bỏ qua đối thủ đã gục</div>
+            </div>
         </div>
-      </div>
+
+        <!-- ESP TAB -->
+        <div id="tab-esp" class="panel-section">
+            <div class="setting-card">
+                <div class="setting-header">
+                    <span class="setting-title">ESP Line</span>
+                    <label class="switch"><input type="checkbox"><span class="slider"></span></label>
+                </div>
+                <div class="setting-desc">Kẻ đường tới đối thủ</div>
+            </div>
+            <div class="setting-card">
+                <div class="setting-header">
+                    <span class="setting-title">ESP Box</span>
+                    <label class="switch"><input type="checkbox"><span class="slider"></span></label>
+                </div>
+                <div class="setting-desc">Vẽ hộp quanh đối thủ</div>
+            </div>
+            <div class="setting-card">
+                <div class="setting-header">
+                    <span class="setting-title">ESP Health</span>
+                    <label class="switch"><input type="checkbox"><span class="slider"></span></label>
+                </div>
+                <div class="setting-desc">Hiện máu đối thủ</div>
+            </div>
+        </div>
+
+        <!-- MISC TAB -->
+        <div id="tab-misc" class="panel-section">
+            <div class="setting-card">
+                <div class="setting-header">
+                    <span class="setting-title">Reload Fire</span>
+                    <label class="switch"><input type="checkbox"><span class="slider"></span></label>
+                </div>
+                <div class="setting-desc">Tự động reload khi bắn</div>
+            </div>
+            <div class="setting-card">
+                <div class="setting-header">
+                    <span class="setting-title">Fast Fire</span>
+                    <label class="switch"><input type="checkbox"><span class="slider"></span></label>
+                </div>
+                <div class="setting-desc">Tăng tốc độ bắn</div>
+            </div>
+        </div>
+
+        <button class="inject-btn" onclick="doInject()">⚡ INJECT</button>
+        <div class="status-bar" id="inject-status">Ready to inject</div>
     </div>
-  </div>
 
-  <script>
-    // Tạo các hạt bay lơ lửng
-    (function createParticles() {
-      const welcome = document.getElementById('welcomeScreen');
-      const particleCount = 30;
-      for (let i = 0; i < particleCount; i++) {
-        const particle = document.createElement('div');
-        particle.classList.add('particle');
-        particle.style.left = Math.random() * 100 + '%';
-        particle.style.animationDuration = (Math.random() * 8 + 6) + 's';
-        particle.style.animationDelay = (Math.random() * 5) + 's';
-        particle.style.width = particle.style.height = (Math.random() * 3 + 2) + 'px';
-        particle.style.opacity = Math.random() * 0.6 + 0.3;
-        const colors = ['#38bdf8', '#fbbf24', '#7dd3fc', '#0ea5e9'];
-        const color = colors[Math.floor(Math.random() * colors.length)];
-        particle.style.background = color;
-        particle.style.boxShadow = `0 0 10px ${color}, 0 0 20px ${color}`;
-        welcome.appendChild(particle);
-      }
-    })();
+    <div class="footer-note">© 2025 FF Hack Panel — For educational purposes only</div>
+</div>
 
-    // Chuyển đổi màn hình
-    const welcomeScreen = document.getElementById('welcomeScreen');
-    const profileCard = document.getElementById('profileCard');
-    const clickHereBtn = document.getElementById('clickHereBtn');
-
-    function showProfile() {
-      welcomeScreen.classList.add('hidden');
-      profileCard.classList.add('visible');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+<script>
+    function selectGame(gameName) {
+        document.getElementById('home-view').style.display = 'none';
+        document.getElementById('panel-view').style.display = 'block';
+        document.querySelector('.nav-bar .btn').innerText = "← Back";
+        document.getElementById('username-display').innerText = gameName;
     }
 
-    function showWelcome() {
-      profileCard.classList.remove('visible');
-      welcomeScreen.classList.remove('hidden');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+    function goHome() {
+        document.getElementById('panel-view').style.display = 'none';
+        document.getElementById('home-view').style.display = 'block';
+        document.querySelector('.nav-bar .btn').innerText = "← Logout";
+        document.getElementById('username-display').innerText = "Nduc";
     }
 
-    clickHereBtn.addEventListener('click', showProfile);
+    function switchTab(tabName) {
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        document.querySelectorAll('.panel-section').forEach(sec => sec.classList.remove('active'));
+        
+        if(tabName === 'aimbot') {
+            document.querySelectorAll('.tab-btn')[0].classList.add('active');
+            document.getElementById('tab-aimbot').classList.add('active');
+        } else if(tabName === 'esp') {
+            document.querySelectorAll('.tab-btn')[1].classList.add('active');
+            document.getElementById('tab-esp').classList.add('active');
+        } else if(tabName === 'misc') {
+            document.querySelectorAll('.tab-btn')[2].classList.add('active');
+            document.getElementById('tab-misc').classList.add('active');
+        }
+    }
 
-    document.addEventListener('keydown', function(e) {
-      if (e.key === 'Enter' && !welcomeScreen.classList.contains('hidden')) {
-        showProfile();
-      }
-      if (e.key === 'Escape' && welcomeScreen.classList.contains('hidden')) {
-        showWelcome();
-      }
-    });
-  </script>
+    function doInject() {
+        const status = document.getElementById('inject-status');
+        status.innerText = "Injecting payload...";
+        setTimeout(() => {
+            status.innerText = "Successfully Injected!";
+        }, 1500);
+    }
+</script>
+
 </body>
 </html>
