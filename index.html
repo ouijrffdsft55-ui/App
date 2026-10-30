@@ -14,12 +14,27 @@ html, body { width:100%; height:100%; overflow:hidden; background:#000; font-fam
 #video { opacity:1; transition:opacity .15s; }
 #overlay { pointer-events:none; }
 
+/* avatar toggle */
+#avatarToggle {
+  position:absolute; top:12px; right:12px; z-index:20;
+  width:48px; height:48px; border-radius:50%;
+  border:2px solid rgba(0,255,136,0.6);
+  background:#111; cursor:pointer; overflow:hidden;
+  box-shadow: 0 0 12px rgba(0,255,136,0.35);
+  transition: transform .15s, box-shadow .15s;
+}
+#avatarToggle:hover { transform:scale(1.06); box-shadow: 0 0 18px rgba(0,255,136,0.6); }
+#avatarToggle img { width:100%; height:100%; object-fit:cover; display:block; }
+#avatarToggle.off { border-color:#555; box-shadow:none; filter:grayscale(1) brightness(0.6); }
+
 #panel {
   position:absolute; top:12px; left:12px; z-index:10;
-  width:240px; background:rgba(14,14,18,0.85);
+  width:260px; background:rgba(14,14,18,0.85);
   border:1px solid rgba(120,140,180,0.25); border-radius:10px;
   backdrop-filter: blur(8px); font-size:13px; user-select:none;
+  transition: opacity .2s, transform .2s;
 }
+#panel.hidden { opacity:0; transform:translateX(-20px); pointer-events:none; }
 #tabs { display:flex; align-items:center; border-bottom:1px solid rgba(120,140,180,0.2); }
 .tab { flex:1; background:transparent; border:0; color:#8899aa; padding:8px 6px; font-family:inherit; font-size:12px; cursor:pointer; letter-spacing:0.5px; text-transform:uppercase; }
 .tab.active { color:#00ff88; box-shadow: inset 0 -2px 0 #00ff88; }
@@ -28,20 +43,46 @@ html, body { width:100%; height:100%; overflow:hidden; background:#000; font-fam
 .tab-content { display:none; padding:10px 12px; }
 .tab-content.active { display:block; }
 .tab-content label { display:flex; align-items:center; justify-content:space-between; gap:8px; padding:6px 0; color:#c8d2dd; cursor:pointer; }
-.tab-content input[type="checkbox"] { appearance:none; width:32px; height:18px; background:#2a3340; border-radius:9px; position:relative; cursor:pointer; transition:0.2s; }
+.tab-content input[type="checkbox"] { appearance:none; width:32px; height:18px; background:#2a3340; border-radius:9px; position:relative; cursor:pointer; transition:0.2s; flex-shrink:0; }
 .tab-content input[type="checkbox"]::after { content:""; position:absolute; top:2px; left:2px; width:14px; height:14px; background:#667; border-radius:50%; transition:0.2s; }
 .tab-content input[type="checkbox"]:checked { background:#00aa66; }
 .tab-content input[type="checkbox"]:checked::after { left:16px; background:#fff; }
-.tab-content input[type="color"] { width:40px; height:22px; border:none; background:transparent; cursor:pointer; }
 .tab-content input[type="range"] { width:90px; accent-color:#00ff88; }
 .divider { height:1px; background:rgba(120,140,180,0.15); margin:8px 0; }
-#status { position:absolute; bottom:10px; left:50%; transform:translateX(-50%); font-size:11px; color:#667; z-index:10; text-align:center; padding:4px 10px; background:rgba(0,0,0,0.5); border-radius:6px; }
+
+/* color row w/ swatches */
+.color-row { display:flex; flex-direction:column; gap:6px; padding:6px 0; }
+.color-row .lbl { color:#c8d2dd; font-size:12px; }
+.swatches { display:flex; gap:6px; }
+.swatch {
+  width:22px; height:22px; border-radius:50%;
+  border:2px solid rgba(255,255,255,0.15);
+  cursor:pointer; transition: transform .12s, border-color .12s;
+  flex-shrink:0;
+}
+.swatch:hover { transform:scale(1.12); }
+.swatch.active { border-color:#fff; box-shadow:0 0 8px rgba(255,255,255,0.5); }
+
+/* enemies counter in esp tab */
+#enemyRow { display:flex; justify-content:space-between; align-items:center; padding:6px 0; color:#c8d2dd; }
+#enemyCount {
+  min-width:28px; text-align:center; padding:2px 8px;
+  background:rgba(255,51,85,0.15); border:1px solid rgba(255,51,85,0.5);
+  color:#ff3355; border-radius:6px; font-weight:bold;
+}
+#enemyCount.zero { background:rgba(120,140,180,0.1); border-color:rgba(120,140,180,0.3); color:#667; }
+
+#status { position:absolute; bottom:10px; left:50%; transform:translateX(-50%); font-size:11px; color:#8899aa; z-index:10; text-align:center; padding:4px 10px; background:rgba(0,0,0,0.55); border-radius:6px; }
 </style>
 </head>
 <body>
 <div id="app">
   <video id="video" playsinline muted autoplay></video>
   <canvas id="overlay"></canvas>
+
+  <button id="avatarToggle" title="Bật/tắt menu">
+    <img src="https://cdn.phototourl.com/member/2026-10-30-29501151-13fe-4d9f-9038-d7907bdd3bf5.jpg" alt="">
+  </button>
 
   <div id="panel">
     <div id="tabs">
@@ -55,16 +96,33 @@ html, body { width:100%; height:100%; overflow:hidden; background:#000; font-fam
       <label><input type="checkbox" id="t-esp-line" checked> ESP Line</label>
       <label><input type="checkbox" id="t-esp-skel" checked> ESP Skeleton</label>
       <label><input type="checkbox" id="t-esp-dist" checked> ESP Distance</label>
+      <label><input type="checkbox" id="t-esp-enemies" checked> ESP Enemies</label>
+      <div id="enemyRow">
+        <span>Số người detect:</span>
+        <span id="enemyCount" class="zero">0</span>
+      </div>
       <div class="divider"></div>
       <label><input type="checkbox" id="t-mirror"> Mirror camera</label>
       <label>Độ mờ nền: <input type="range" id="t-bgalpha" min="0" max="100" value="100"></label>
     </div>
 
     <div class="tab-content" id="tab-color">
-      <label>Box: <input type="color" id="c-box" value="#00ff88"></label>
-      <label>Line: <input type="color" id="c-line" value="#ff3355"></label>
-      <label>Skeleton: <input type="color" id="c-skel" value="#00ddff"></label>
-      <label>Distance: <input type="color" id="c-dist" value="#ffdd00"></label>
+      <div class="color-row" data-key="colorBox">
+        <span class="lbl">Box</span>
+        <div class="swatches"></div>
+      </div>
+      <div class="color-row" data-key="colorLine">
+        <span class="lbl">Line</span>
+        <div class="swatches"></div>
+      </div>
+      <div class="color-row" data-key="colorSkel">
+        <span class="lbl">Skeleton</span>
+        <div class="swatches"></div>
+      </div>
+      <div class="color-row" data-key="colorDist">
+        <span class="lbl">Distance</span>
+        <div class="swatches"></div>
+      </div>
       <div class="divider"></div>
       <label>Độ dày nét: <input type="range" id="c-width" min="1" max="6" value="2"></label>
     </div>
@@ -78,9 +136,19 @@ const video   = document.getElementById('video');
 const overlay = document.getElementById('overlay');
 const ctx     = overlay.getContext('2d');
 const statusEl= document.getElementById('status');
+const enemyEl = document.getElementById('enemyCount');
+
+const PALETTE = [
+  { name:'đỏ',    value:'#ff3355' },
+  { name:'vàng',  value:'#ffdd00' },
+  { name:'hồng',  value:'#ff66cc' },
+  { name:'đen',   value:'#000000' },
+  { name:'trắng', value:'#ffffff' },
+  { name:'xanh lá', value:'#00ff88' },
+];
 
 const state = {
-  box: true, line: true, skeleton: true, distance: true,
+  box: true, line: true, skeleton: true, distance: true, enemies: true,
   mirror: false, bgAlpha: 100,
   colorBox: '#00ff88', colorLine: '#ff3355',
   colorSkel: '#00ddff', colorDist: '#ffdd00',
@@ -111,6 +179,7 @@ bindToggle('t-esp-box',  'box');
 bindToggle('t-esp-line', 'line');
 bindToggle('t-esp-skel', 'skeleton');
 bindToggle('t-esp-dist', 'distance');
+bindToggle('t-esp-enemies','enemies');
 bindToggle('t-mirror',   'mirror');
 
 document.getElementById('t-bgalpha').addEventListener('input', e => {
@@ -118,15 +187,26 @@ document.getElementById('t-bgalpha').addEventListener('input', e => {
   video.style.opacity = state.bgAlpha / 100;
 });
 
-function bindColor(id, key) {
-  const el = document.getElementById(id);
-  el.addEventListener('input', () => state[key] = el.value);
-  state[key] = el.value;
-}
-bindColor('c-box','colorBox');
-bindColor('c-line','colorLine');
-bindColor('c-skel','colorSkel');
-bindColor('c-dist','colorDist');
+// build swatches
+document.querySelectorAll('.color-row').forEach(row => {
+  const key = row.dataset.key;
+  const holder = row.querySelector('.swatches');
+  PALETTE.forEach(sw => {
+    const b = document.createElement('button');
+    b.className = 'swatch';
+    b.style.background = sw.value;
+    b.title = sw.name;
+    b.dataset.value = sw.value;
+    if (sw.value.toLowerCase() === state[key].toLowerCase()) b.classList.add('active');
+    b.addEventListener('click', () => {
+      state[key] = sw.value;
+      holder.querySelectorAll('.swatch').forEach(s => s.classList.remove('active'));
+      b.classList.add('active');
+    });
+    holder.appendChild(b);
+  });
+});
+
 document.getElementById('c-width').addEventListener('input', e => state.strokeWidth = +e.target.value);
 
 document.querySelectorAll('.tab').forEach(btn => {
@@ -143,6 +223,13 @@ document.getElementById('collapse').addEventListener('click', () => {
   p.dataset.min = hidden ? '0' : '1';
   p.querySelectorAll('.tab-content, #tabs .tab').forEach(el => el.style.display = hidden ? '' : 'none');
   document.getElementById('collapse').textContent = hidden ? '–' : '+';
+});
+
+// avatar toggle
+const avatarBtn = document.getElementById('avatarToggle');
+avatarBtn.addEventListener('click', () => {
+  document.getElementById('panel').classList.toggle('hidden');
+  avatarBtn.classList.toggle('off');
 });
 
 async function startCamera() {
@@ -170,8 +257,53 @@ pose.setOptions({
   minTrackingConfidence: 0.5
 });
 
-let lastLandmarks = null;
-pose.onResults(res => { lastLandmarks = res.poseLandmarks; });
+// smooth filter (One Euro) per landmark per coord
+const NUM_LM = 33;
+const filt = Array.from({length:NUM_LM}, () => ({
+  x: makeOneEuro(1.2, 0.007),
+  y: makeOneEuro(1.2, 0.007),
+  v: makeOneEuro(1.5, 0.01)
+}));
+function makeOneEuro(minCutoff, beta) {
+  let xPrev = 0, dxPrev = 0, tPrev = null, initialized = false;
+  return (val, tSec) => {
+    if (!initialized) { xPrev = val; tPrev = tSec; initialized = true; return val; }
+    const dt = Math.max(1e-3, tSec - tPrev);
+    const dx = (val - xPrev) / dt;
+    const alpha = alphaFor(minCutoff, dt);
+    const dxHat = alpha * dx + (1 - alpha) * dxPrev;
+    const cutoff = minCutoff + beta * Math.abs(dxHat);
+    const alpha2 = alphaFor(cutoff, dt);
+    const xHat = alpha2 * val + (1 - alpha2) * xPrev;
+    xPrev = xHat; dxPrev = dxHat; tPrev = tSec;
+    return xHat;
+  };
+}
+function alphaFor(cutoff, dt) {
+  const tau = 1 / (2 * Math.PI * cutoff);
+  return 1 / (1 + tau / dt);
+}
+
+let rawLandmarks = null;
+let smoothLandmarks = null;
+
+pose.onResults(res => {
+  rawLandmarks = res.poseLandmarks || null;
+  if (rawLandmarks) {
+    const tSec = performance.now() / 1000;
+    smoothLandmarks = rawLandmarks.map((p, i) => {
+      if (!p) return null;
+      return {
+        x: filt[i].x(p.x, tSec),
+        y: filt[i].y(p.y, tSec),
+        z: p.z,
+        visibility: filt[i].v(p.visibility ?? 0, tSec)
+      };
+    });
+  } else {
+    smoothLandmarks = null;
+  }
+});
 
 const camera = new Camera(video, {
   onFrame: async () => { await pose.send({ image: video }); },
@@ -186,14 +318,16 @@ function norm(p) {
 
 function bboxFromLandmarks(lm) {
   let minX = 1e9, minY = 1e9, maxX = -1e9, maxY = -1e9;
+  let visible = 0;
   for (const p of lm) {
     if (!p || p.visibility < 0.3) continue;
+    visible++;
     if (p.x < minX) minX = p.x;
     if (p.y < minY) minY = p.y;
     if (p.x > maxX) maxX = p.x;
     if (p.y > maxY) maxY = p.y;
   }
-  if (minX === 1e9) return null;
+  if (minX === 1e9 || visible < 5) return null;
   const padX = 0.03, padY = 0.04;
   return {
     x: (minX - padX) * window.innerWidth,
@@ -203,16 +337,20 @@ function bboxFromLandmarks(lm) {
   };
 }
 
-function draw() {
+let lastEnemyLabelUpdate = 0;
+function draw(now) {
   ctx.clearRect(0,0,window.innerWidth, window.innerHeight);
-  const lm = lastLandmarks;
-  if (lm) {
-    const w = window.innerWidth, h = window.innerHeight;
-    const sw = state.strokeWidth;
+  const lm = smoothLandmarks;
 
-    if (state.box) {
-      const b = bboxFromLandmarks(lm);
-      if (b) {
+  let detected = 0;
+  if (lm) {
+    const b = bboxFromLandmarks(lm);
+    if (b) detected = 1;
+
+    if (b) {
+      const sw = state.strokeWidth;
+
+      if (state.box) {
         ctx.strokeStyle = state.colorBox;
         ctx.lineWidth = sw;
         ctx.strokeRect(b.x, b.y, b.w, b.h);
@@ -226,47 +364,44 @@ function draw() {
           ctx.stroke();
         });
       }
-    }
 
-    if (state.skeleton) {
-      ctx.strokeStyle = state.colorSkel;
-      ctx.lineWidth = sw;
-      ctx.beginPath();
-      for (const [a,b] of CONNECTIONS) {
-        const pa = lm[a], pb = lm[b];
-        if (!pa || !pb || pa.visibility < 0.3 || pb.visibility < 0.3) continue;
-        const A = norm(pa), B = norm(pb);
-        ctx.moveTo(A.x, A.y);
-        ctx.lineTo(B.x, B.y);
-      }
-      ctx.stroke();
-
-      ctx.fillStyle = state.colorSkel;
-      for (const p of lm) {
-        if (!p || p.visibility < 0.3) continue;
-        const P = norm(p);
-        ctx.beginPath();
-        ctx.arc(P.x, P.y, sw + 1.5, 0, Math.PI*2);
-        ctx.fill();
-      }
-    }
-
-    if (state.line) {
-      const nose = lm[0];
-      if (nose && nose.visibility > 0.3) {
-        const P = norm(nose);
-        ctx.strokeStyle = state.colorLine;
+      if (state.skeleton) {
+        ctx.strokeStyle = state.colorSkel;
         ctx.lineWidth = sw;
+        ctx.lineCap = 'round';
         ctx.beginPath();
-        ctx.moveTo(window.innerWidth/2, window.innerHeight);
-        ctx.lineTo(P.x, P.y);
+        for (const [a,bb] of CONNECTIONS) {
+          const pa = lm[a], pb = lm[bb];
+          if (!pa || !pb || pa.visibility < 0.3 || pb.visibility < 0.3) continue;
+          const A = norm(pa), B = norm(pb);
+          ctx.moveTo(A.x, A.y);
+          ctx.lineTo(B.x, B.y);
+        }
         ctx.stroke();
+        ctx.fillStyle = state.colorSkel;
+        for (const p of lm) {
+          if (!p || p.visibility < 0.3) continue;
+          const P = norm(p);
+          ctx.beginPath();
+          ctx.arc(P.x, P.y, sw + 1.5, 0, Math.PI*2);
+          ctx.fill();
+        }
       }
-    }
 
-    if (state.distance) {
-      const b = bboxFromLandmarks(lm);
-      if (b) {
+      if (state.line) {
+        const nose = lm[0];
+        if (nose && nose.visibility > 0.3) {
+          const P = norm(nose);
+          ctx.strokeStyle = state.colorLine;
+          ctx.lineWidth = sw;
+          ctx.beginPath();
+          ctx.moveTo(window.innerWidth/2, window.innerHeight);
+          ctx.lineTo(P.x, P.y);
+          ctx.stroke();
+        }
+      }
+
+      if (state.distance) {
         const ratio = b.h / window.innerHeight;
         const meters = Math.max(0.4, (1.6 / ratio) * 0.45);
         ctx.fillStyle = state.colorDist;
@@ -276,13 +411,21 @@ function draw() {
       }
     }
   }
+
+  // update enemies counter (throttle 200ms)
+  if (state.enemies && now - lastEnemyLabelUpdate > 200) {
+    lastEnemyLabelUpdate = now;
+    enemyEl.textContent = detected;
+    enemyEl.classList.toggle('zero', detected === 0);
+  }
+
   requestAnimationFrame(draw);
 }
 
 (async () => {
   await startCamera();
   await camera.start();
-  requestAnimationFrame(draw);
+  requestAnimationFrame(t => { lastEnemyLabelUpdate = t; draw(t); });
 })();
 </script>
 </body>
