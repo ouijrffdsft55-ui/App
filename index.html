@@ -4,16 +4,33 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Human ESP Multi</title>
-<script src="https://cdn.jsdelivr.net/npm/rtmlib-ts@0.1.0/dist/rtmlib-ts.umd.js" crossorigin="anonymous"></script>
+
+<!-- Load chính chủ Google MediaPipe: Tasks Vision (Object Detector + Pose) -->
+<script type="module">
+import { ObjectDetector, PoseLandmarker, FilesetResolver } 
+  from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.12";
+window.ObjectDetector = ObjectDetector;
+window.PoseLandmarker = PoseLandmarker;
+window.FilesetResolver = FilesetResolver;
+window.dispatchEvent(new Event('mp-loaded'));
+</script>
+
 <style>
 * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
 html, body { width:100%; height:100%; overflow:hidden; background:#000; font-family: ui-monospace, Consolas, monospace; color:#e6e6e6; }
-#app { position:relative; width:100vw; height:100vh; }
+#app { position:relative; width:100vw; height:100vh; background:#000; }
 #video, #overlay { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
-#video { opacity:1; }
+#video { opacity:1; transition:opacity .2s; }
 #overlay { pointer-events:none; }
+
+#startScreen { position:absolute; inset:0; z-index:50; background:#000; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:16px; }
+#startBtn { padding:14px 28px; font-size:16px; background:#00ff88; color:#000; border:none; border-radius:8px; font-weight:bold; cursor:pointer; letter-spacing:1px; }
+#startBtn:active { transform:scale(0.96); }
+#startText { color:#8899aa; font-size:13px; text-align:center; max-width:280px; line-height:1.5; }
+
 #avatarToggle { position:absolute; top:12px; right:12px; z-index:20; width:48px; height:48px; border-radius:50%; border:2px solid rgba(0,255,136,0.6); background:#111; cursor:pointer; overflow:hidden; box-shadow:0 0 12px rgba(0,255,136,0.35); }
 #avatarToggle img { width:100%; height:100%; object-fit:cover; }
+
 #panel { position:absolute; top:12px; left:12px; z-index:10; width:260px; background:rgba(14,14,18,0.88); border:1px solid rgba(120,140,180,0.25); border-radius:10px; backdrop-filter:blur(8px); font-size:13px; user-select:none; transition:opacity .2s; }
 #panel.hidden { opacity:0; pointer-events:none; }
 #tabs { display:flex; border-bottom:1px solid rgba(120,140,180,0.2); }
@@ -43,8 +60,15 @@ html, body { width:100%; height:100%; overflow:hidden; background:#000; font-fam
 <div id="app">
   <video id="video" playsinline muted autoplay></video>
   <canvas id="overlay"></canvas>
+  
+  <div id="startScreen">
+    <button id="startBtn">BẬT CAMERA</button>
+    <div id="startText">Nhấn để cấp quyền camera và bắt đầu ESP</div>
+  </div>
+
   <button id="avatarToggle"><img src="https://cdn.phototourl.com/member/2026-10-30-29501151-13fe-4d9f-9038-d7907bdd3bf5.jpg" alt=""></button>
-  <div id="panel">
+  
+  <div id="panel" class="hidden">
     <div id="tabs">
       <button class="tab active" data-tab="esp">ESP</button>
       <button class="tab" data-tab="color">Màu</button>
@@ -57,7 +81,7 @@ html, body { width:100%; height:100%; overflow:hidden; background:#000; font-fam
       <label><input type="checkbox" id="t-esp-enemies" checked> ESP Enemies</label>
       <div id="enemyRow"><span>Số người:</span><span id="enemyCount" class="zero">0</span></div>
       <div class="divider"></div>
-      <label><input type="checkbox" id="t-mirror"> Mirror</label>
+      <label><input type="checkbox" id="t-mirror"> Mirror camera</label>
     </div>
     <div class="tab-content" id="tab-color">
       <div class="color-row" data-key="colorBox"><span class="lbl">Box</span><div class="swatches"></div></div>
@@ -65,176 +89,313 @@ html, body { width:100%; height:100%; overflow:hidden; background:#000; font-fam
       <div class="color-row" data-key="colorSkel"><span class="lbl">Skeleton</span><div class="swatches"></div></div>
       <div class="color-row" data-key="colorDist"><span class="lbl">Distance</span><div class="swatches"></div></div>
       <div class="divider"></div>
-      <label>Độ dày: <input type="range" id="c-width" min="1" max="6" value="2"></label>
+      <label>Độ dày nét: <input type="range" id="c-width" min="1" max="6" value="2"></label>
     </div>
   </div>
-  <div id="status">đang tải model…</div>
+  <div id="status">chờ bật camera…</div>
 </div>
+
 <script>
-const video = document.getElementById('video');
-const overlay = document.getElementById('overlay');
-const ctx = overlay.getContext('2d');
-const statusEl = document.getElementById('status');
-const enemyEl = document.getElementById('enemyCount');
+// Đợi thư viện Google MediaPipe load xong mới chạy
+window.addEventListener('mp-loaded', initApp);
 
-const PALETTE = ['#ff3355','#ffdd00','#ff66cc','#000000','#ffffff','#00ff88'];
-const state = {
-  box:true, line:true, skeleton:true, distance:true, enemies:true, mirror:false,
-  colorBox:'#00ff88', colorLine:'#ff3355', colorSkel:'#00ddff', colorDist:'#ffdd00', width:2
-};
+function initApp() {
+  const video = document.getElementById('video');
+  const overlay = document.getElementById('overlay');
+  const ctx = overlay.getContext('2d');
+  const statusEl = document.getElementById('status');
+  const enemyEl = document.getElementById('enemyCount');
+  const startScreen = document.getElementById('startScreen');
+  const startBtn = document.getElementById('startBtn');
 
-// CONNECTIONS NỐI LIỀN: đầu → thân → chân
-const CONNECTIONS = [
-  // mặt
-  [0,1],[1,2],[2,3],[3,7],[0,4],[4,5],[5,6],[6,8],
-  // đầu nối thân (cổ → vai)
-  [0,11],[0,12],
-  // vai → khuỷu → cổ tay
-  [11,13],[13,15],[12,14],[14,16],
-  // vai → hông (thân liền)
-  [11,23],[12,24],[23,24],
-  // hông → gối → cổ chân (chân liền)
-  [23,25],[25,27],[24,26],[26,28],
-  // bàn chân
-  [27,29],[29,31],[27,31],[28,30],[30,32],[28,32]
-];
-
-function resize() {
-  overlay.width = innerWidth * devicePixelRatio;
-  overlay.height = innerHeight * devicePixelRatio;
-  ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);
-}
-addEventListener('resize', resize); resize();
-
-function bindToggle(id, key) { const el=document.getElementById(id); const f=()=>state[key]=el.checked; el.addEventListener('change',f); f(); }
-bindToggle('t-esp-box','box'); bindToggle('t-esp-line','line');
-bindToggle('t-esp-skel','skeleton'); bindToggle('t-esp-dist','distance');
-bindToggle('t-esp-enemies','enemies'); bindToggle('t-mirror','mirror');
-
-document.querySelectorAll('.color-row').forEach(row => {
-  const key = row.dataset.key; const holder = row.querySelector('.swatches');
-  PALETTE.forEach(c => {
-    const b = document.createElement('button'); b.className='swatch'; b.style.background=c;
-    if (c.toLowerCase()===state[key]) b.classList.add('active');
-    b.onclick = () => { state[key]=c; holder.querySelectorAll('.swatch').forEach(s=>s.classList.remove('active')); b.classList.add('active'); };
-    holder.appendChild(b);
-  });
-});
-document.getElementById('c-width').oninput = e => state.width = +e.target.value;
-
-document.querySelectorAll('.tab').forEach(btn => {
-  btn.onclick = () => {
-    document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
-    document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
-    btn.classList.add('active'); document.getElementById('tab-'+btn.dataset.tab).classList.add('active');
+  const PALETTE = ['#ff3355','#ffdd00','#ff66cc','#000000','#ffffff','#00ff88'];
+  const state = {
+    box:true, line:true, skeleton:true, distance:true, enemies:true, mirror:false,
+    colorBox:'#00ff88', colorLine:'#ff3355', colorSkel:'#00ddff', colorDist:'#ffdd00', width:2
   };
-});
 
-const avatarBtn = document.getElementById('avatarToggle');
-avatarBtn.onclick = () => { document.getElementById('panel').classList.toggle('hidden'); };
+  // Skeleton nối liền chuẩn (33 landmarks)
+  const CONNECTIONS = [
+    [0,1],[1,2],[2,3],[3,7],[0,4],[4,5],[5,6],[6,8],
+    [0,11],[0,12],[11,13],[13,15],[12,14],[14,16],
+    [11,23],[12,24],[23,24],[23,25],[25,27],[24,26],[26,28],
+    [27,29],[29,31],[27,31],[28,30],[30,32],[28,32]
+  ];
 
-let poseDetector = null;
-let lastPeople = [];
+  function resize() {
+    overlay.width = window.innerWidth * devicePixelRatio;
+    overlay.height = window.innerHeight * devicePixelRatio;
+    ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);
+  }
+  window.addEventListener('resize', resize); resize();
 
-async function init() {
-  statusEl.textContent = 'đang tải detector…';
-  // rtmlib-ts: ObjectDetector multi-person + PoseDetector per crop
-  const rtmlib = window.rtmlibTs || window.rtmlib;
-  if (!rtmlib) { statusEl.textContent = 'lỗi: rtmlib chưa load'; return; }
+  function bindToggle(id, key) {
+    const el = document.getElementById(id); const f = () => state[key] = el.checked;
+    el.addEventListener('change', f); f();
+  }
+  bindToggle('t-esp-box','box'); bindToggle('t-esp-line','line');
+  bindToggle('t-esp-skel','skeleton'); bindToggle('t-esp-dist','distance');
+  bindToggle('t-esp-enemies','enemies'); bindToggle('t-mirror','mirror');
 
-  // MediaPipe ObjectDetector (person-only, nhanh)
-  const detector = new rtmlib.ObjectDetector({
-    detectorType: 'mediapipe',
-    mediaPipeScoreThreshold: 0.5,
-    classes: ['person']
-  });
-  await detector.init();
-  poseDetector = detector;
-  statusEl.textContent = 'model OK — đang detect';
-
-  // camera
-  try {
-    const stream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: { ideal: 'environment' }, width:{ideal:1280}, height:{ideal:720} }, audio:false
+  document.querySelectorAll('.color-row').forEach(row => {
+    const key = row.dataset.key; const holder = row.querySelector('.swatches');
+    PALETTE.forEach(c => {
+      const b = document.createElement('button'); b.className='swatch'; b.style.background=c;
+      if (c.toLowerCase()===state[key]) b.classList.add('active');
+      b.onclick = () => { state[key]=c; holder.querySelectorAll('.swatch').forEach(s=>s.classList.remove('active')); b.classList.add('active'); };
+      holder.appendChild(b);
     });
-    video.srcObject = stream; await video.play();
-  } catch(e) { statusEl.textContent = 'camera lỗi: '+e.message; return; }
-
-  loop();
-}
-
-let lastLabel = 0;
-function loop(now=performance.now()) {
-  if (poseDetector && video.readyState >= 2) {
-    // vẽ frame hiện tại trước
-    ctx.clearRect(0,0,innerWidth,innerHeight);
-
-    // detect persons từ video frame
-    poseDetector.detectFromVideo(video).then(res => {
-      const people = res?.detections || res?.boxes || [];
-      lastPeople = people.filter(d => (d.className==='person' || d.class==='person' || d.category==='person') && (d.confidence||d.score||0) > 0.4);
-      drawPeople(lastPeople, now);
-    }).catch(()=>{});
-  }
-  requestAnimationFrame(loop);
-}
-
-function drawPeople(people, now) {
-  const w = innerWidth, h = innerHeight, sw = state.width;
-
-  people.forEach((p, idx) => {
-    // bounding box (x,y,w,h) hoặc (x1,y1,x2,y2)
-    let bx = p.x ?? p.bbox?.[0] ?? p.x1 ?? 0;
-    let by = p.y ?? p.bbox?.[1] ?? p.y1 ?? 0;
-    let bw = p.width ?? (p.bbox?.[2] ?? p.x2 ?? 0) - bx;
-    let bh = p.height ?? (p.bbox?.[3] ?? p.y2 ?? 0) - by;
-    if (state.mirror) bx = w - bx - bw;
-
-    if (state.box) {
-      ctx.strokeStyle = state.colorBox; ctx.lineWidth = sw;
-      ctx.strokeRect(bx, by, bw, bh);
-    }
-    if (state.line) {
-      ctx.strokeStyle = state.colorLine; ctx.lineWidth = sw;
-      ctx.beginPath(); ctx.moveTo(w/2, h); ctx.lineTo(bx+bw/2, by); ctx.stroke();
-    }
-    if (state.distance) {
-      const ratio = bh / h;
-      const meters = Math.max(0.4, (1.6/ratio)*0.45);
-      ctx.fillStyle = state.colorDist; ctx.font = `${12+sw}px monospace`;
-      ctx.fillText(`${meters.toFixed(1)}m`, bx, by-6);
-    }
-    // Skeleton: nếu detector trả keypoints thì vẽ
-    if (state.skeleton && (p.keypoints || p.landmarks)) {
-      const lm = p.keypoints || p.landmarks;
-      ctx.strokeStyle = state.colorSkel; ctx.lineWidth = sw; ctx.lineCap='round';
-      ctx.beginPath();
-      for (const [a,b] of CONNECTIONS) {
-        const pa = lm[a], pb = lm[b];
-        if (!pa || !pb || (pa.visibility!==undefined && pa.visibility < 0.3)) continue;
-        let ax = pa.x, ay = pa.y, bx2 = pb.x, by2 = pb.y;
-        if (state.mirror) { ax = 1-ax; bx2 = 1-bx2; }
-        ctx.moveTo(ax*w, ay*h); ctx.lineTo(bx2*w, by2*h);
-      }
-      ctx.stroke();
-      // đầu tròn
-      const nose = lm[0];
-      if (nose) {
-        let nx = nose.x, ny = nose.y; if (state.mirror) nx = 1-nx;
-        ctx.fillStyle = state.colorSkel;
-        ctx.beginPath(); ctx.arc(nx*w, ny*h, sw+3, 0, Math.PI*2); ctx.fill();
-      }
-    }
   });
+  document.getElementById('c-width').oninput = e => state.width = +e.target.value;
 
-  if (state.enemies && now - lastLabel > 200) {
-    lastLabel = now;
-    enemyEl.textContent = people.length;
-    enemyEl.classList.toggle('zero', people.length===0);
+  document.querySelectorAll('.tab').forEach(btn => {
+    btn.onclick = () => {
+      document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
+      btn.classList.add('active'); document.getElementById('tab-'+btn.dataset.tab).classList.add('active');
+    };
+  });
+  document.getElementById('avatarToggle').onclick = () => document.getElementById('panel').classList.toggle('hidden');
+
+  let objectDetector = null;
+  let poseLandmarker = null;
+  let lastVideoTime = -1;
+  let lastResults = [];
+  let smoothBoxes = {}; // Lưu box mượt theo ID track
+  let nextId = 0;
+
+  async function loadModels() {
+    statusEl.textContent = 'đang tải model AI (chờ xíu)…';
+    const vision = await window.FilesetResolver.forVisionTasks(
+      "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.12/wasm"
+    );
+    
+    // 1. Object Detector (tìm nhiều người)
+    objectDetector = await window.ObjectDetector.createFromOptions(vision, {
+      baseOptions: {
+        modelAssetPath: "https://storage.googleapis.com/mediapipe-models/object_detector/efficientdet_lite0/float16/1/efficientdet_lite0.tflite",
+        delegate: "GPU"
+      },
+      scoreThreshold: 0.4,
+      categoryAllowlist: ["person"]
+    });
+
+    // 2. Pose Landmarker (vẽ skeleton)
+    poseLandmarker = await window.PoseLandmarker.createFromOptions(vision, {
+      baseOptions: {
+        modelAssetPath: "https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task",
+        delegate: "GPU"
+      },
+      runningMode: "VIDEO",
+      numPoses: 1 // chạy 1 pose trên 1 crop
+    });
+    statusEl.textContent = 'model OK - chờ camera';
   }
-}
 
-init();
+  function smoothBbox(newBox) {
+    // One Euro Filter đơn giản cho Box
+    const alpha = 0.35; // độ mượt (0.1 = rất mượt, 0.8 = rất nhanh)
+    if (!newBox) return null;
+    if (!smoothBoxes['main']) { smoothBoxes['main'] = {...newBox}; return newBox; }
+    const b = smoothBoxes['main'];
+    b.x += (newBox.x - b.x) * alpha;
+    b.y += (newBox.y - b.y) * alpha;
+    b.w += (newBox.w - b.w) * alpha;
+    b.h += (newBox.h - b.h) * alpha;
+    return b;
+  }
+
+  async function detectLoop() {
+    if (video.readyState < 2 || !objectDetector || !poseLandmarker) {
+      requestAnimationFrame(detectLoop); return;
+    }
+    
+    const now = performance.now();
+    if (video.currentTime !== lastVideoTime) {
+      lastVideoTime = video.currentTime;
+      
+      // Detect boxes (người)
+      const detections = objectDetector.detectForVideo(video, now);
+      
+      let people = [];
+      if (detections && detections.detections) {
+        for (const det of detections.detections) {
+          const bbox = det.boundingBox; // {originX, originY, width, height} tính bằng pixel của video
+          if (bbox) {
+            const w = video.videoWidth;
+            const h = video.videoHeight;
+            // Convert sang tỉ lệ 0-1
+            const box = {
+              x: bbox.originX / w,
+              y: bbox.originY / h,
+              w: bbox.width / w,
+              h: bbox.height / h
+            };
+            // Crop để chạy Pose
+            const cropCanvas = document.createElement('canvas');
+            cropCanvas.width = bbox.width;
+            cropCanvas.height = bbox.height;
+            const cCtx = cropCanvas.getContext('2d');
+            cCtx.drawImage(video, bbox.originX, bbox.originY, bbox.width, bbox.height, 0, 0, bbox.width, bbox.height);
+            
+            const poseRes = poseLandmarker.detectForVideo(cropCanvas, now);
+            let landmarks = null;
+            if (poseRes && poseRes.landmarks && poseRes.landmarks.length > 0) {
+              // Landmarks của Pose nằm trong khoảng 0-1 so với crop ảnh, cần chuyển về 0-1 của video gốc
+              landmarks = poseRes.landmarks[0].map(lm => ({
+                x: box.x + lm.x * box.w,
+                y: box.y + lm.y * box.h,
+                visibility: lm.visibility
+              }));
+            }
+            people.push({ box, landmarks });
+          }
+        }
+      }
+      lastResults = people;
+    }
+
+    drawFrame(now);
+    requestAnimationFrame(detectLoop);
+  }
+
+  let lastLabel = 0;
+  function drawFrame(now) {
+    const w = window.innerWidth;
+    const h = window.innerHeight;
+    const sw = state.width;
+    ctx.clearRect(0, 0, w, h);
+
+    // Sắp xếp để người gần nhất vẽ trước
+    lastResults.forEach(p => {
+      let box = p.box;
+      
+      // 1. NẾU CÓ LANDMARKS: Bám box theo skeleton (chính xác hơn)
+      if (p.landmarks && state.skeleton) {
+        let minX = 1, minY = 1, maxX = 0, maxY = 0;
+        p.landmarks.forEach(lm => {
+          if (lm.visibility > 0.4) {
+            if (lm.x < minX) minX = lm.x;
+            if (lm.y < minY) minY = lm.y;
+            if (lm.x > maxX) maxX = lm.x;
+            if (lm.y > maxY) maxY = lm.y;
+          }
+        });
+        if (maxX > minX) {
+          // Pad thêm 5% cho đẹp
+          const padX = 0.02, padY = 0.03;
+          box = { x: minX - padX, y: minY - padY, w: (maxX - minX) + padX*2, h: (maxY - minY) + padY*2 };
+        }
+      }
+
+      // 2. Làm mượt Box
+      const smBox = smoothBbox(box);
+      if (!smBox) return;
+
+      // Map sang màn hình
+      let bx = smBox.x * w;
+      let by = smBox.y * h;
+      let bw = smBox.w * w;
+      let bh = smBox.h * h;
+
+      if (state.mirror) {
+        bx = w - bx - bw;
+      }
+
+      // Vẽ Box (dùng góc vuông + viền mỏng)
+      if (state.box) {
+        ctx.strokeStyle = state.colorBox; 
+        ctx.lineWidth = sw;
+        ctx.strokeRect(bx, by, bw, bh);
+        // Viền góc
+        const t = Math.min(15, bw*0.2, bh*0.2);
+        ctx.lineWidth = sw + 1.5;
+        [[bx,by,1,1],[bx+bw,by,-1,1],[bx,by+bh,1,-1],[bx+bw,by+bh,-1,-1]].forEach(([cx,cy,dx,dy]) => {
+          ctx.beginPath(); ctx.moveTo(cx+dx*t, cy); ctx.lineTo(cx, cy); ctx.lineTo(cx, cy+dy*t); ctx.stroke();
+        });
+      }
+
+      // Vẽ Distance
+      if (state.distance) {
+        const ratio = bh / h;
+        const meters = Math.max(0.5, (1.7 / ratio) * 0.45); // giả định cao 1m7
+        ctx.fillStyle = state.colorDist; 
+        ctx.font = `bold ${12+sw}px monospace`;
+        ctx.textAlign = 'left';
+        ctx.fillText(`${meters.toFixed(1)}m`, bx, by - 8);
+      }
+
+      // Vẽ Line
+      if (state.line) {
+        ctx.strokeStyle = state.colorLine; 
+        ctx.lineWidth = sw;
+        ctx.beginPath(); 
+        ctx.moveTo(w/2, h); 
+        ctx.lineTo(bx + bw/2, by); 
+        ctx.stroke();
+      }
+
+      // Vẽ Skeleton
+      if (state.skeleton && p.landmarks) {
+        ctx.strokeStyle = state.colorSkel; 
+        ctx.lineWidth = sw; 
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        p.landmarks.forEach((lm, i) => {
+          // Tìm các kết nối
+          CONNECTIONS.forEach(([a, b]) => {
+            const p1 = p.landmarks[a], p2 = p.landmarks[b];
+            if (p1 && p2 && p1.visibility > 0.4 && p2.visibility > 0.4) {
+              let x1 = p1.x * w, y1 = p1.y * h;
+              let x2 = p2.x * w, y2 = p2.y * h;
+              if (state.mirror) { x1 = w-x1; x2 = w-x2; }
+              ctx.moveTo(x1, y1); ctx.lineTo(x2, y2);
+            }
+          });
+        });
+        ctx.stroke();
+
+        // Đầu tròn (landmark 0 là mũi)
+        const nose = p.landmarks[0];
+        if (nose && nose.visibility > 0.4) {
+          let nx = nose.x * w, ny = nose.y * h;
+          if (state.mirror) nx = w - nx;
+          ctx.fillStyle = state.colorSkel;
+          ctx.beginPath(); 
+          ctx.arc(nx, ny, sw + 3, 0, Math.PI*2); 
+          ctx.fill();
+        }
+      }
+    });
+
+    // Update Enemies
+    if (state.enemies && now - lastLabel > 200) {
+      lastLabel = now;
+      const count = lastResults.length;
+      enemyEl.textContent = count;
+      enemyEl.classList.toggle('zero', count === 0);
+    }
+  }
+
+  // Bắt đầu luồng
+  startBtn.onclick = async () => {
+    startScreen.style.display = 'none';
+    try {
+      await loadModels();
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: { ideal: 'environment' }, width:{ideal:1280}, height:{ideal:720} }, 
+        audio: false
+      });
+      video.srcObject = stream; 
+      await video.play();
+      statusEl.textContent = 'đang detect…';
+      detectLoop();
+    } catch(e) {
+      statusEl.textContent = 'lỗi camera: ' + e.message;
+      alert('Không mở được camera. Hãy cấp quyền và chạy lại.');
+    }
+  };
+}
 </script>
 </body>
 </html>
