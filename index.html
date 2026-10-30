@@ -3,430 +3,238 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Human ESP</title>
-<script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js" crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+<title>Human ESP Multi</title>
+<script src="https://cdn.jsdelivr.net/npm/rtmlib-ts@0.1.0/dist/rtmlib-ts.umd.js" crossorigin="anonymous"></script>
 <style>
 * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
-html, body { width:100%; height:100%; overflow:hidden; background:#000; font-family: ui-monospace, "SF Mono", Consolas, monospace; color:#e6e6e6; }
+html, body { width:100%; height:100%; overflow:hidden; background:#000; font-family: ui-monospace, Consolas, monospace; color:#e6e6e6; }
 #app { position:relative; width:100vw; height:100vh; }
 #video, #overlay { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
-#video { opacity:1; transition:opacity .15s; }
+#video { opacity:1; }
 #overlay { pointer-events:none; }
-
-/* avatar toggle */
-#avatarToggle {
-  position:absolute; top:12px; right:12px; z-index:20;
-  width:48px; height:48px; border-radius:50%;
-  border:2px solid rgba(0,255,136,0.6);
-  background:#111; cursor:pointer; overflow:hidden;
-  box-shadow: 0 0 12px rgba(0,255,136,0.35);
-  transition: transform .15s, box-shadow .15s;
-}
-#avatarToggle:hover { transform:scale(1.06); box-shadow: 0 0 18px rgba(0,255,136,0.6); }
-#avatarToggle img { width:100%; height:100%; object-fit:cover; display:block; }
-#avatarToggle.off { border-color:#555; box-shadow:none; filter:grayscale(1) brightness(0.6); }
-
-#panel {
-  position:absolute; top:12px; left:12px; z-index:10;
-  width:260px; background:rgba(14,14,18,0.85);
-  border:1px solid rgba(120,140,180,0.25); border-radius:10px;
-  backdrop-filter: blur(8px); font-size:13px; user-select:none;
-  transition: opacity .2s, transform .2s;
-}
-#panel.hidden { opacity:0; transform:translateX(-20px); pointer-events:none; }
-#tabs { display:flex; align-items:center; border-bottom:1px solid rgba(120,140,180,0.2); }
-.tab { flex:1; background:transparent; border:0; color:#8899aa; padding:8px 6px; font-family:inherit; font-size:12px; cursor:pointer; letter-spacing:0.5px; text-transform:uppercase; }
-.tab.active { color:#00ff88; box-shadow: inset 0 -2px 0 #00ff88; }
-#collapse { width:32px; background:transparent; border:0; color:#8899aa; font-size:16px; cursor:pointer; }
-
+#avatarToggle { position:absolute; top:12px; right:12px; z-index:20; width:48px; height:48px; border-radius:50%; border:2px solid rgba(0,255,136,0.6); background:#111; cursor:pointer; overflow:hidden; box-shadow:0 0 12px rgba(0,255,136,0.35); }
+#avatarToggle img { width:100%; height:100%; object-fit:cover; }
+#panel { position:absolute; top:12px; left:12px; z-index:10; width:260px; background:rgba(14,14,18,0.88); border:1px solid rgba(120,140,180,0.25); border-radius:10px; backdrop-filter:blur(8px); font-size:13px; user-select:none; transition:opacity .2s; }
+#panel.hidden { opacity:0; pointer-events:none; }
+#tabs { display:flex; border-bottom:1px solid rgba(120,140,180,0.2); }
+.tab { flex:1; background:transparent; border:0; color:#8899aa; padding:8px 6px; font-family:inherit; font-size:12px; cursor:pointer; text-transform:uppercase; }
+.tab.active { color:#00ff88; box-shadow:inset 0 -2px 0 #00ff88; }
 .tab-content { display:none; padding:10px 12px; }
 .tab-content.active { display:block; }
-.tab-content label { display:flex; align-items:center; justify-content:space-between; gap:8px; padding:6px 0; color:#c8d2dd; cursor:pointer; }
+.tab-content label { display:flex; align-items:center; justify-content:space-between; padding:6px 0; color:#c8d2dd; cursor:pointer; gap:8px; }
 .tab-content input[type="checkbox"] { appearance:none; width:32px; height:18px; background:#2a3340; border-radius:9px; position:relative; cursor:pointer; transition:0.2s; flex-shrink:0; }
 .tab-content input[type="checkbox"]::after { content:""; position:absolute; top:2px; left:2px; width:14px; height:14px; background:#667; border-radius:50%; transition:0.2s; }
 .tab-content input[type="checkbox"]:checked { background:#00aa66; }
 .tab-content input[type="checkbox"]:checked::after { left:16px; background:#fff; }
-.tab-content input[type="range"] { width:90px; accent-color:#00ff88; }
 .divider { height:1px; background:rgba(120,140,180,0.15); margin:8px 0; }
-
-/* color row w/ swatches */
 .color-row { display:flex; flex-direction:column; gap:6px; padding:6px 0; }
 .color-row .lbl { color:#c8d2dd; font-size:12px; }
 .swatches { display:flex; gap:6px; }
-.swatch {
-  width:22px; height:22px; border-radius:50%;
-  border:2px solid rgba(255,255,255,0.15);
-  cursor:pointer; transition: transform .12s, border-color .12s;
-  flex-shrink:0;
-}
-.swatch:hover { transform:scale(1.12); }
+.swatch { width:22px; height:22px; border-radius:50%; border:2px solid rgba(255,255,255,0.15); cursor:pointer; transition:transform .12s; }
 .swatch.active { border-color:#fff; box-shadow:0 0 8px rgba(255,255,255,0.5); }
-
-/* enemies counter in esp tab */
+.swatch:hover { transform:scale(1.12); }
 #enemyRow { display:flex; justify-content:space-between; align-items:center; padding:6px 0; color:#c8d2dd; }
-#enemyCount {
-  min-width:28px; text-align:center; padding:2px 8px;
-  background:rgba(255,51,85,0.15); border:1px solid rgba(255,51,85,0.5);
-  color:#ff3355; border-radius:6px; font-weight:bold;
-}
+#enemyCount { min-width:28px; text-align:center; padding:2px 8px; background:rgba(255,51,85,0.15); border:1px solid rgba(255,51,85,0.5); color:#ff3355; border-radius:6px; font-weight:bold; }
 #enemyCount.zero { background:rgba(120,140,180,0.1); border-color:rgba(120,140,180,0.3); color:#667; }
-
-#status { position:absolute; bottom:10px; left:50%; transform:translateX(-50%); font-size:11px; color:#8899aa; z-index:10; text-align:center; padding:4px 10px; background:rgba(0,0,0,0.55); border-radius:6px; }
+#status { position:absolute; bottom:10px; left:50%; transform:translateX(-50%); font-size:11px; color:#8899aa; z-index:10; padding:4px 10px; background:rgba(0,0,0,0.55); border-radius:6px; }
 </style>
 </head>
 <body>
 <div id="app">
   <video id="video" playsinline muted autoplay></video>
   <canvas id="overlay"></canvas>
-
-  <button id="avatarToggle" title="Bật/tắt menu">
-    <img src="https://cdn.phototourl.com/member/2026-10-30-29501151-13fe-4d9f-9038-d7907bdd3bf5.jpg" alt="">
-  </button>
-
+  <button id="avatarToggle"><img src="https://cdn.phototourl.com/member/2026-10-30-29501151-13fe-4d9f-9038-d7907bdd3bf5.jpg" alt=""></button>
   <div id="panel">
     <div id="tabs">
       <button class="tab active" data-tab="esp">ESP</button>
       <button class="tab" data-tab="color">Màu</button>
-      <button id="collapse">–</button>
     </div>
-
     <div class="tab-content active" id="tab-esp">
       <label><input type="checkbox" id="t-esp-box" checked> ESP Box</label>
       <label><input type="checkbox" id="t-esp-line" checked> ESP Line</label>
       <label><input type="checkbox" id="t-esp-skel" checked> ESP Skeleton</label>
       <label><input type="checkbox" id="t-esp-dist" checked> ESP Distance</label>
       <label><input type="checkbox" id="t-esp-enemies" checked> ESP Enemies</label>
-      <div id="enemyRow">
-        <span>Số người detect:</span>
-        <span id="enemyCount" class="zero">0</span>
-      </div>
+      <div id="enemyRow"><span>Số người:</span><span id="enemyCount" class="zero">0</span></div>
       <div class="divider"></div>
-      <label><input type="checkbox" id="t-mirror"> Mirror camera</label>
-      <label>Độ mờ nền: <input type="range" id="t-bgalpha" min="0" max="100" value="100"></label>
+      <label><input type="checkbox" id="t-mirror"> Mirror</label>
     </div>
-
     <div class="tab-content" id="tab-color">
-      <div class="color-row" data-key="colorBox">
-        <span class="lbl">Box</span>
-        <div class="swatches"></div>
-      </div>
-      <div class="color-row" data-key="colorLine">
-        <span class="lbl">Line</span>
-        <div class="swatches"></div>
-      </div>
-      <div class="color-row" data-key="colorSkel">
-        <span class="lbl">Skeleton</span>
-        <div class="swatches"></div>
-      </div>
-      <div class="color-row" data-key="colorDist">
-        <span class="lbl">Distance</span>
-        <div class="swatches"></div>
-      </div>
+      <div class="color-row" data-key="colorBox"><span class="lbl">Box</span><div class="swatches"></div></div>
+      <div class="color-row" data-key="colorLine"><span class="lbl">Line</span><div class="swatches"></div></div>
+      <div class="color-row" data-key="colorSkel"><span class="lbl">Skeleton</span><div class="swatches"></div></div>
+      <div class="color-row" data-key="colorDist"><span class="lbl">Distance</span><div class="swatches"></div></div>
       <div class="divider"></div>
-      <label>Độ dày nét: <input type="range" id="c-width" min="1" max="6" value="2"></label>
+      <label>Độ dày: <input type="range" id="c-width" min="1" max="6" value="2"></label>
     </div>
   </div>
-
-  <div id="status">đang khởi động camera…</div>
+  <div id="status">đang tải model…</div>
 </div>
-
 <script>
-const video   = document.getElementById('video');
+const video = document.getElementById('video');
 const overlay = document.getElementById('overlay');
-const ctx     = overlay.getContext('2d');
-const statusEl= document.getElementById('status');
+const ctx = overlay.getContext('2d');
+const statusEl = document.getElementById('status');
 const enemyEl = document.getElementById('enemyCount');
 
-const PALETTE = [
-  { name:'đỏ',    value:'#ff3355' },
-  { name:'vàng',  value:'#ffdd00' },
-  { name:'hồng',  value:'#ff66cc' },
-  { name:'đen',   value:'#000000' },
-  { name:'trắng', value:'#ffffff' },
-  { name:'xanh lá', value:'#00ff88' },
-];
-
+const PALETTE = ['#ff3355','#ffdd00','#ff66cc','#000000','#ffffff','#00ff88'];
 const state = {
-  box: true, line: true, skeleton: true, distance: true, enemies: true,
-  mirror: false, bgAlpha: 100,
-  colorBox: '#00ff88', colorLine: '#ff3355',
-  colorSkel: '#00ddff', colorDist: '#ffdd00',
-  strokeWidth: 2,
+  box:true, line:true, skeleton:true, distance:true, enemies:true, mirror:false,
+  colorBox:'#00ff88', colorLine:'#ff3355', colorSkel:'#00ddff', colorDist:'#ffdd00', width:2
 };
 
+// CONNECTIONS NỐI LIỀN: đầu → thân → chân
 const CONNECTIONS = [
-  [11,12],[11,13],[13,15],[12,14],[14,16],
+  // mặt
+  [0,1],[1,2],[2,3],[3,7],[0,4],[4,5],[5,6],[6,8],
+  // đầu nối thân (cổ → vai)
+  [0,11],[0,12],
+  // vai → khuỷu → cổ tay
+  [11,13],[13,15],[12,14],[14,16],
+  // vai → hông (thân liền)
   [11,23],[12,24],[23,24],
+  // hông → gối → cổ chân (chân liền)
   [23,25],[25,27],[24,26],[26,28],
-  [0,11],[0,12]
+  // bàn chân
+  [27,29],[29,31],[27,31],[28,30],[30,32],[28,32]
 ];
 
-function resizeCanvas() {
-  overlay.width  = window.innerWidth  * devicePixelRatio;
-  overlay.height = window.innerHeight * devicePixelRatio;
+function resize() {
+  overlay.width = innerWidth * devicePixelRatio;
+  overlay.height = innerHeight * devicePixelRatio;
   ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);
 }
-window.addEventListener('resize', resizeCanvas);
-resizeCanvas();
+addEventListener('resize', resize); resize();
 
-function bindToggle(id, key) {
-  const el = document.getElementById(id);
-  const apply = () => { state[key] = el.checked; };
-  el.addEventListener('change', apply); apply();
-}
-bindToggle('t-esp-box',  'box');
-bindToggle('t-esp-line', 'line');
-bindToggle('t-esp-skel', 'skeleton');
-bindToggle('t-esp-dist', 'distance');
-bindToggle('t-esp-enemies','enemies');
-bindToggle('t-mirror',   'mirror');
+function bindToggle(id, key) { const el=document.getElementById(id); const f=()=>state[key]=el.checked; el.addEventListener('change',f); f(); }
+bindToggle('t-esp-box','box'); bindToggle('t-esp-line','line');
+bindToggle('t-esp-skel','skeleton'); bindToggle('t-esp-dist','distance');
+bindToggle('t-esp-enemies','enemies'); bindToggle('t-mirror','mirror');
 
-document.getElementById('t-bgalpha').addEventListener('input', e => {
-  state.bgAlpha = +e.target.value;
-  video.style.opacity = state.bgAlpha / 100;
-});
-
-// build swatches
 document.querySelectorAll('.color-row').forEach(row => {
-  const key = row.dataset.key;
-  const holder = row.querySelector('.swatches');
-  PALETTE.forEach(sw => {
-    const b = document.createElement('button');
-    b.className = 'swatch';
-    b.style.background = sw.value;
-    b.title = sw.name;
-    b.dataset.value = sw.value;
-    if (sw.value.toLowerCase() === state[key].toLowerCase()) b.classList.add('active');
-    b.addEventListener('click', () => {
-      state[key] = sw.value;
-      holder.querySelectorAll('.swatch').forEach(s => s.classList.remove('active'));
-      b.classList.add('active');
-    });
+  const key = row.dataset.key; const holder = row.querySelector('.swatches');
+  PALETTE.forEach(c => {
+    const b = document.createElement('button'); b.className='swatch'; b.style.background=c;
+    if (c.toLowerCase()===state[key]) b.classList.add('active');
+    b.onclick = () => { state[key]=c; holder.querySelectorAll('.swatch').forEach(s=>s.classList.remove('active')); b.classList.add('active'); };
     holder.appendChild(b);
   });
 });
-
-document.getElementById('c-width').addEventListener('input', e => state.strokeWidth = +e.target.value);
+document.getElementById('c-width').oninput = e => state.width = +e.target.value;
 
 document.querySelectorAll('.tab').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
-    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-    btn.classList.add('active');
-    document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
-  });
-});
-document.getElementById('collapse').addEventListener('click', () => {
-  const p = document.getElementById('panel');
-  const hidden = p.dataset.min === '1';
-  p.dataset.min = hidden ? '0' : '1';
-  p.querySelectorAll('.tab-content, #tabs .tab').forEach(el => el.style.display = hidden ? '' : 'none');
-  document.getElementById('collapse').textContent = hidden ? '–' : '+';
+  btn.onclick = () => {
+    document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
+    btn.classList.add('active'); document.getElementById('tab-'+btn.dataset.tab).classList.add('active');
+  };
 });
 
-// avatar toggle
 const avatarBtn = document.getElementById('avatarToggle');
-avatarBtn.addEventListener('click', () => {
-  document.getElementById('panel').classList.toggle('hidden');
-  avatarBtn.classList.toggle('off');
-});
+avatarBtn.onclick = () => { document.getElementById('panel').classList.toggle('hidden'); };
 
-async function startCamera() {
+let poseDetector = null;
+let lastPeople = [];
+
+async function init() {
+  statusEl.textContent = 'đang tải detector…';
+  // rtmlib-ts: ObjectDetector multi-person + PoseDetector per crop
+  const rtmlib = window.rtmlibTs || window.rtmlib;
+  if (!rtmlib) { statusEl.textContent = 'lỗi: rtmlib chưa load'; return; }
+
+  // MediaPipe ObjectDetector (person-only, nhanh)
+  const detector = new rtmlib.ObjectDetector({
+    detectorType: 'mediapipe',
+    mediaPipeScoreThreshold: 0.5,
+    classes: ['person']
+  });
+  await detector.init();
+  poseDetector = detector;
+  statusEl.textContent = 'model OK — đang detect';
+
+  // camera
   try {
     const stream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } },
-      audio: false
+      video: { facingMode: { ideal: 'environment' }, width:{ideal:1280}, height:{ideal:720} }, audio:false
     });
-    video.srcObject = stream;
-    await video.play();
-    statusEl.textContent = 'camera OK — đang detect';
-  } catch (err) {
-    statusEl.textContent = 'lỗi camera: ' + err.message;
+    video.srcObject = stream; await video.play();
+  } catch(e) { statusEl.textContent = 'camera lỗi: '+e.message; return; }
+
+  loop();
+}
+
+let lastLabel = 0;
+function loop(now=performance.now()) {
+  if (poseDetector && video.readyState >= 2) {
+    // vẽ frame hiện tại trước
+    ctx.clearRect(0,0,innerWidth,innerHeight);
+
+    // detect persons từ video frame
+    poseDetector.detectFromVideo(video).then(res => {
+      const people = res?.detections || res?.boxes || [];
+      lastPeople = people.filter(d => (d.className==='person' || d.class==='person' || d.category==='person') && (d.confidence||d.score||0) > 0.4);
+      drawPeople(lastPeople, now);
+    }).catch(()=>{});
   }
+  requestAnimationFrame(loop);
 }
 
-const pose = new Pose({
-  locateFile: f => `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${f}`
-});
-pose.setOptions({
-  modelComplexity: 1,
-  smoothLandmarks: true,
-  enableSegmentation: false,
-  minDetectionConfidence: 0.5,
-  minTrackingConfidence: 0.5
-});
+function drawPeople(people, now) {
+  const w = innerWidth, h = innerHeight, sw = state.width;
 
-// smooth filter (One Euro) per landmark per coord
-const NUM_LM = 33;
-const filt = Array.from({length:NUM_LM}, () => ({
-  x: makeOneEuro(1.2, 0.007),
-  y: makeOneEuro(1.2, 0.007),
-  v: makeOneEuro(1.5, 0.01)
-}));
-function makeOneEuro(minCutoff, beta) {
-  let xPrev = 0, dxPrev = 0, tPrev = null, initialized = false;
-  return (val, tSec) => {
-    if (!initialized) { xPrev = val; tPrev = tSec; initialized = true; return val; }
-    const dt = Math.max(1e-3, tSec - tPrev);
-    const dx = (val - xPrev) / dt;
-    const alpha = alphaFor(minCutoff, dt);
-    const dxHat = alpha * dx + (1 - alpha) * dxPrev;
-    const cutoff = minCutoff + beta * Math.abs(dxHat);
-    const alpha2 = alphaFor(cutoff, dt);
-    const xHat = alpha2 * val + (1 - alpha2) * xPrev;
-    xPrev = xHat; dxPrev = dxHat; tPrev = tSec;
-    return xHat;
-  };
-}
-function alphaFor(cutoff, dt) {
-  const tau = 1 / (2 * Math.PI * cutoff);
-  return 1 / (1 + tau / dt);
-}
+  people.forEach((p, idx) => {
+    // bounding box (x,y,w,h) hoặc (x1,y1,x2,y2)
+    let bx = p.x ?? p.bbox?.[0] ?? p.x1 ?? 0;
+    let by = p.y ?? p.bbox?.[1] ?? p.y1 ?? 0;
+    let bw = p.width ?? (p.bbox?.[2] ?? p.x2 ?? 0) - bx;
+    let bh = p.height ?? (p.bbox?.[3] ?? p.y2 ?? 0) - by;
+    if (state.mirror) bx = w - bx - bw;
 
-let rawLandmarks = null;
-let smoothLandmarks = null;
-
-pose.onResults(res => {
-  rawLandmarks = res.poseLandmarks || null;
-  if (rawLandmarks) {
-    const tSec = performance.now() / 1000;
-    smoothLandmarks = rawLandmarks.map((p, i) => {
-      if (!p) return null;
-      return {
-        x: filt[i].x(p.x, tSec),
-        y: filt[i].y(p.y, tSec),
-        z: p.z,
-        visibility: filt[i].v(p.visibility ?? 0, tSec)
-      };
-    });
-  } else {
-    smoothLandmarks = null;
-  }
-});
-
-const camera = new Camera(video, {
-  onFrame: async () => { await pose.send({ image: video }); },
-  width: 640, height: 480
-});
-
-function norm(p) {
-  let x = p.x;
-  if (state.mirror) x = 1 - x;
-  return { x: x * window.innerWidth, y: p.y * window.innerHeight };
-}
-
-function bboxFromLandmarks(lm) {
-  let minX = 1e9, minY = 1e9, maxX = -1e9, maxY = -1e9;
-  let visible = 0;
-  for (const p of lm) {
-    if (!p || p.visibility < 0.3) continue;
-    visible++;
-    if (p.x < minX) minX = p.x;
-    if (p.y < minY) minY = p.y;
-    if (p.x > maxX) maxX = p.x;
-    if (p.y > maxY) maxY = p.y;
-  }
-  if (minX === 1e9 || visible < 5) return null;
-  const padX = 0.03, padY = 0.04;
-  return {
-    x: (minX - padX) * window.innerWidth,
-    y: (minY - padY) * window.innerHeight,
-    w: (maxX - minX + padX * 2) * window.innerWidth,
-    h: (maxY - minY + padY * 2) * window.innerHeight,
-  };
-}
-
-let lastEnemyLabelUpdate = 0;
-function draw(now) {
-  ctx.clearRect(0,0,window.innerWidth, window.innerHeight);
-  const lm = smoothLandmarks;
-
-  let detected = 0;
-  if (lm) {
-    const b = bboxFromLandmarks(lm);
-    if (b) detected = 1;
-
-    if (b) {
-      const sw = state.strokeWidth;
-
-      if (state.box) {
-        ctx.strokeStyle = state.colorBox;
-        ctx.lineWidth = sw;
-        ctx.strokeRect(b.x, b.y, b.w, b.h);
-        const t = Math.min(14, b.w*0.15);
-        ctx.lineWidth = sw + 1;
-        [[b.x,b.y,1,1],[b.x+b.w,b.y,-1,1],[b.x,b.y+b.h,1,-1],[b.x+b.w,b.y+b.h,-1,-1]].forEach(([cx,cy,dx,dy]) => {
-          ctx.beginPath();
-          ctx.moveTo(cx + dx*t, cy);
-          ctx.lineTo(cx, cy);
-          ctx.lineTo(cx, cy + dy*t);
-          ctx.stroke();
-        });
+    if (state.box) {
+      ctx.strokeStyle = state.colorBox; ctx.lineWidth = sw;
+      ctx.strokeRect(bx, by, bw, bh);
+    }
+    if (state.line) {
+      ctx.strokeStyle = state.colorLine; ctx.lineWidth = sw;
+      ctx.beginPath(); ctx.moveTo(w/2, h); ctx.lineTo(bx+bw/2, by); ctx.stroke();
+    }
+    if (state.distance) {
+      const ratio = bh / h;
+      const meters = Math.max(0.4, (1.6/ratio)*0.45);
+      ctx.fillStyle = state.colorDist; ctx.font = `${12+sw}px monospace`;
+      ctx.fillText(`${meters.toFixed(1)}m`, bx, by-6);
+    }
+    // Skeleton: nếu detector trả keypoints thì vẽ
+    if (state.skeleton && (p.keypoints || p.landmarks)) {
+      const lm = p.keypoints || p.landmarks;
+      ctx.strokeStyle = state.colorSkel; ctx.lineWidth = sw; ctx.lineCap='round';
+      ctx.beginPath();
+      for (const [a,b] of CONNECTIONS) {
+        const pa = lm[a], pb = lm[b];
+        if (!pa || !pb || (pa.visibility!==undefined && pa.visibility < 0.3)) continue;
+        let ax = pa.x, ay = pa.y, bx2 = pb.x, by2 = pb.y;
+        if (state.mirror) { ax = 1-ax; bx2 = 1-bx2; }
+        ctx.moveTo(ax*w, ay*h); ctx.lineTo(bx2*w, by2*h);
       }
-
-      if (state.skeleton) {
-        ctx.strokeStyle = state.colorSkel;
-        ctx.lineWidth = sw;
-        ctx.lineCap = 'round';
-        ctx.beginPath();
-        for (const [a,bb] of CONNECTIONS) {
-          const pa = lm[a], pb = lm[bb];
-          if (!pa || !pb || pa.visibility < 0.3 || pb.visibility < 0.3) continue;
-          const A = norm(pa), B = norm(pb);
-          ctx.moveTo(A.x, A.y);
-          ctx.lineTo(B.x, B.y);
-        }
-        ctx.stroke();
+      ctx.stroke();
+      // đầu tròn
+      const nose = lm[0];
+      if (nose) {
+        let nx = nose.x, ny = nose.y; if (state.mirror) nx = 1-nx;
         ctx.fillStyle = state.colorSkel;
-        for (const p of lm) {
-          if (!p || p.visibility < 0.3) continue;
-          const P = norm(p);
-          ctx.beginPath();
-          ctx.arc(P.x, P.y, sw + 1.5, 0, Math.PI*2);
-          ctx.fill();
-        }
-      }
-
-      if (state.line) {
-        const nose = lm[0];
-        if (nose && nose.visibility > 0.3) {
-          const P = norm(nose);
-          ctx.strokeStyle = state.colorLine;
-          ctx.lineWidth = sw;
-          ctx.beginPath();
-          ctx.moveTo(window.innerWidth/2, window.innerHeight);
-          ctx.lineTo(P.x, P.y);
-          ctx.stroke();
-        }
-      }
-
-      if (state.distance) {
-        const ratio = b.h / window.innerHeight;
-        const meters = Math.max(0.4, (1.6 / ratio) * 0.45);
-        ctx.fillStyle = state.colorDist;
-        ctx.font = `${12 + sw}px ui-monospace, monospace`;
-        ctx.textAlign = 'left';
-        ctx.fillText(`${meters.toFixed(1)}m`, b.x, b.y - 6);
+        ctx.beginPath(); ctx.arc(nx*w, ny*h, sw+3, 0, Math.PI*2); ctx.fill();
       }
     }
-  }
+  });
 
-  // update enemies counter (throttle 200ms)
-  if (state.enemies && now - lastEnemyLabelUpdate > 200) {
-    lastEnemyLabelUpdate = now;
-    enemyEl.textContent = detected;
-    enemyEl.classList.toggle('zero', detected === 0);
+  if (state.enemies && now - lastLabel > 200) {
+    lastLabel = now;
+    enemyEl.textContent = people.length;
+    enemyEl.classList.toggle('zero', people.length===0);
   }
-
-  requestAnimationFrame(draw);
 }
 
-(async () => {
-  await startCamera();
-  await camera.start();
-  requestAnimationFrame(t => { lastEnemyLabelUpdate = t; draw(t); });
-})();
+init();
 </script>
 </body>
 </html>
