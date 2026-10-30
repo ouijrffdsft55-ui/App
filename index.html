@@ -1,388 +1,99 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="vi">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Human ESP Multi</title>
-
-<!-- Load thư viện chính chủ Google -->
-<script type="module">
-import { PoseLandmarker, FilesetResolver } 
-  from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.12";
-window.PoseLandmarker = PoseLandmarker;
-window.FilesetResolver = FilesetResolver;
-window.dispatchEvent(new Event('mp-loaded'));
-</script>
-
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Axiom ESP Camera GUI</title>
 <style>
-* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
-html, body { width:100%; height:100%; overflow:hidden; background:#000; font-family: ui-monospace, Consolas, monospace; color:#e6e6e6; }
-#app { position:relative; width:100vw; height:100vh; background:#000; }
-#video, #overlay { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
-#video { opacity:1; }
-#overlay { pointer-events:none; }
-
-#startScreen { position:absolute; inset:0; z-index:50; background:#000; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:16px; }
-#startBtn { padding:14px 28px; font-size:16px; background:#00ff88; color:#000; border:none; border-radius:8px; font-weight:bold; cursor:pointer; }
-#startBtn:active { transform:scale(0.96); }
-#startText { color:#8899aa; font-size:13px; text-align:center; max-width:280px; line-height:1.5; }
-
-#avatarToggle { position:absolute; top:12px; right:12px; z-index:20; width:48px; height:48px; border-radius:50%; border:2px solid rgba(0,255,136,0.6); background:#111; cursor:pointer; overflow:hidden; box-shadow:0 0 12px rgba(0,255,136,0.35); }
-#avatarToggle img { width:100%; height:100%; object-fit:cover; }
-
-#panel { position:absolute; top:12px; left:12px; z-index:10; width:260px; background:rgba(14,14,18,0.88); border:1px solid rgba(120,140,180,0.25); border-radius:10px; backdrop-filter:blur(8px); font-size:13px; user-select:none; transition:opacity .2s; }
-#panel.hidden { opacity:0; pointer-events:none; }
-#tabs { display:flex; border-bottom:1px solid rgba(120,140,180,0.2); }
-.tab { flex:1; background:transparent; border:0; color:#8899aa; padding:8px 6px; font-family:inherit; font-size:12px; cursor:pointer; text-transform:uppercase; }
-.tab.active { color:#00ff88; box-shadow:inset 0 -2px 0 #00ff88; }
-.tab-content { display:none; padding:10px 12px; }
-.tab-content.active { display:block; }
-.tab-content label { display:flex; align-items:center; justify-content:space-between; padding:6px 0; color:#c8d2dd; cursor:pointer; gap:8px; }
-.tab-content input[type="checkbox"] { appearance:none; width:32px; height:18px; background:#2a3340; border-radius:9px; position:relative; cursor:pointer; transition:0.2s; flex-shrink:0; }
-.tab-content input[type="checkbox"]::after { content:""; position:absolute; top:2px; left:2px; width:14px; height:14px; background:#667; border-radius:50%; transition:0.2s; }
-.tab-content input[type="checkbox"]:checked { background:#00aa66; }
-.tab-content input[type="checkbox"]:checked::after { left:16px; background:#fff; }
-.divider { height:1px; background:rgba(120,140,180,0.15); margin:8px 0; }
-.color-row { display:flex; flex-direction:column; gap:6px; padding:6px 0; }
-.color-row .lbl { color:#c8d2dd; font-size:12px; }
-.swatches { display:flex; gap:6px; }
-.swatch { width:22px; height:22px; border-radius:50%; border:2px solid rgba(255,255,255,0.15); cursor:pointer; transition:transform .12s; }
-.swatch.active { border-color:#fff; box-shadow:0 0 8px rgba(255,255,255,0.5); }
-.swatch:hover { transform:scale(1.12); }
-#enemyRow { display:flex; justify-content:space-between; align-items:center; padding:6px 0; color:#c8d2dd; }
-#enemyCount { min-width:28px; text-align:center; padding:2px 8px; background:rgba(255,51,85,0.15); border:1px solid rgba(255,51,85,0.5); color:#ff3355; border-radius:6px; font-weight:bold; }
-#enemyCount.zero { background:rgba(120,140,180,0.1); border-color:rgba(120,140,180,0.3); color:#667; }
-#status { position:absolute; bottom:10px; left:50%; transform:translateX(-50%); font-size:11px; color:#8899aa; z-index:10; padding:4px 10px; background:rgba(0,0,0,0.55); border-radius:6px; }
+:root{--bg:#070b13;--panel:#0d1422;--panel2:#101c2d;--line:#20314a;--cyan:#39d9ff;--text:#f4f8ff;--muted:#8ea3bd;--accent:#39d9ff}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 15% 0%,#10263a 0,transparent 45%),var(--bg);color:var(--text);font:15px/1.45 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+.app{max-width:1180px;margin:auto;padding:22px}.top{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:20px}.brand{display:flex;align-items:center;gap:12px}.logo{width:43px;height:43px;border-radius:13px;background:linear-gradient(135deg,#39d9ff,#5276ff);display:grid;place-items:center;color:#06111b;font-weight:1000;font-size:20px;box-shadow:0 0 28px #39d9ff30}.brand h1{font-size:20px;margin:0;letter-spacing:.08em}.brand p{margin:3px 0 0;color:var(--muted);font-size:12px}.pill{border:1px solid #23415b;background:#0c1c2a;color:#93eaff;border-radius:99px;padding:7px 11px;font-size:12px}
+.layout{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(320px,1fr);gap:18px}.panel{background:linear-gradient(180deg,#0e1726,#0a111d);border:1px solid var(--line);border-radius:18px;overflow:hidden;box-shadow:0 15px 40px #0003}.panel-head{padding:16px 18px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center}.panel-head h2{margin:0;font-size:14px;letter-spacing:.07em}.sub{color:var(--muted);font-size:12px}.preview{position:relative;aspect-ratio:16/10;background:repeating-linear-gradient(0deg,#0a1220 0,#0a1220 29px,#0d1928 30px),repeating-linear-gradient(90deg,transparent 0,transparent 29px,#142338 30px);display:grid;place-items:center;overflow:hidden}.preview video{position:absolute;width:100%;height:100%;object-fit:cover;display:none;transform:scaleX(-1)}.preview video.active{display:block}.hud{position:absolute;inset:0;pointer-events:none}.hud:before{content:"";position:absolute;inset:12px;border:1px solid #9bdfff25;border-radius:8px}.corner{position:absolute;width:18px;height:18px;border-color:var(--accent);border-style:solid}.tl{top:12px;left:12px;border-width:2px 0 0 2px}.tr{top:12px;right:12px;border-width:2px 2px 0 0}.bl{bottom:12px;left:12px;border-width:0 0 2px 2px}.br{bottom:12px;right:12px;border-width:0 2px 2px 0}.preview-empty{text-align:center;z-index:1;padding:24px;max-width:340px}.camera-icon{font-size:36px;margin-bottom:8px}.preview-empty h3{margin:0 0 6px;font-size:17px}.preview-empty p{color:var(--muted);font-size:13px;margin:0 0 16px}.actions{display:flex;flex-wrap:wrap;gap:9px;padding:15px 18px}.btn{border:1px solid #2a4561;border-radius:10px;padding:10px 14px;background:#14243a;color:var(--text);font-weight:700;cursor:pointer;transition:.18s}.btn:hover{border-color:var(--cyan);transform:translateY(-1px)}.btn.primary{background:linear-gradient(135deg,#20b9e6,#4777ff);color:#06101a;border:0}.btn.danger{background:#311b29;border-color:#683047}.note{margin:0 18px 17px;padding:11px 12px;border-radius:10px;background:#121c2b;color:#a9bdd3;font-size:12px;border:1px solid #22344a}.tabs{display:flex;gap:8px;padding:12px;border-bottom:1px solid var(--line)}.tab{flex:1;border:1px solid transparent;border-radius:10px;padding:10px;background:transparent;color:var(--muted);font-weight:800;cursor:pointer}.tab.active{color:#07131d;background:var(--accent);box-shadow:0 0 22px color-mix(in srgb,var(--accent) 20%,transparent)}.tabpage{padding:14px;display:none}.tabpage.active{display:block}.feature{display:flex;align-items:center;gap:12px;padding:13px 12px;border:1px solid #1e3047;background:#0c1523;border-radius:12px;margin-bottom:9px}.feature .symbol{width:36px;height:36px;border-radius:10px;background:#14263a;display:grid;place-items:center;color:var(--accent);font-weight:900}.feature .info{flex:1;min-width:0}.feature strong{display:block;font-size:14px}.feature small{display:block;color:var(--muted);font-size:11px;margin-top:2px}.switch{position:relative;width:43px;height:24px;flex:0 0 auto}.switch input{opacity:0;width:0;height:0}.slider{position:absolute;inset:0;background:#26374c;border-radius:99px;cursor:pointer;transition:.2s}.slider:before{content:"";position:absolute;width:18px;height:18px;left:3px;top:3px;background:#9fb0c3;border-radius:50%;transition:.2s}.switch input:checked+.slider{background:var(--accent)}.switch input:checked+.slider:before{transform:translateX(19px);background:#06111b}.color-row{padding:13px 12px;margin-bottom:9px;border:1px solid #1e3047;border-radius:12px;background:#0c1523}.color-top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:11px}.color-top strong{font-size:13px}.swatches{display:flex;gap:10px;flex-wrap:wrap}.swatch{width:27px;height:27px;border-radius:50%;border:2px solid #ffffff20;cursor:pointer;position:relative;padding:0}.swatch.selected{outline:2px solid var(--text);outline-offset:3px}.swatch.selected:after{content:"✓";position:absolute;inset:0;display:grid;place-items:center;color:#111;font-weight:1000;text-shadow:0 0 3px #fff}.swatch.white.selected:after{color:#111}.tiny{color:var(--muted);font-size:11px}.statusbar{display:flex;gap:10px;flex-wrap:wrap;padding:12px 18px;border-top:1px solid var(--line)}.status-item{font-size:12px;color:var(--muted)}.status-item b{color:var(--text);font-weight:700}.status-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:#64748b;margin-right:6px}.status-dot.on{background:#4ee6a5;box-shadow:0 0 8px #4ee6a580}.footer{color:#6f849d;font-size:11px;text-align:center;padding:20px 0 4px}.toast{position:fixed;bottom:18px;left:50%;transform:translate(-50%,20px);opacity:0;pointer-events:none;background:#13253a;border:1px solid #31516e;border-radius:12px;padding:11px 15px;transition:.2s;z-index:10;box-shadow:0 10px 30px #0007}.toast.show{opacity:1;transform:translate(-50%,0)}
+@media(max-width:800px){.app{padding:13px}.layout{grid-template-columns:1fr}.top{align-items:flex-start}.pill{display:none}.preview{aspect-ratio:4/3}.brand h1{font-size:17px}}
 </style>
 </head>
 <body>
-<div id="app">
-  <video id="video" playsinline muted autoplay></video>
-  <canvas id="overlay"></canvas>
-  
-  <div id="startScreen">
-    <button id="startBtn">BẬT CAMERA</button>
-    <div id="startText">Nhấn để cấp quyền camera</div>
-  </div>
-
-  <button id="avatarToggle"><img src="https://cdn.phototourl.com/member/2026-10-30-29501151-13fe-4d9f-9038-d7907bdd3bf5.jpg" alt=""></button>
-  
-  <div id="panel" class="hidden">
-    <div id="tabs">
-      <button class="tab active" data-tab="esp">ESP</button>
-      <button class="tab" data-tab="color">Màu</button>
-    </div>
-    <div class="tab-content active" id="tab-esp">
-      <label><input type="checkbox" id="t-esp-box" checked> ESP Box</label>
-      <label><input type="checkbox" id="t-esp-line" checked> ESP Line</label>
-      <label><input type="checkbox" id="t-esp-skel" checked> ESP Skeleton</label>
-      <label><input type="checkbox" id="t-esp-dist" checked> ESP Distance</label>
-      <label><input type="checkbox" id="t-esp-enemies" checked> ESP Enemies</label>
-      <div id="enemyRow"><span>Số người:</span><span id="enemyCount" class="zero">0</span></div>
-      <div class="divider"></div>
-      <label><input type="checkbox" id="t-mirror"> Mirror camera</label>
-    </div>
-    <div class="tab-content" id="tab-color">
-      <div class="color-row" data-key="colorBox"><span class="lbl">Box</span><div class="swatches"></div></div>
-      <div class="color-row" data-key="colorLine"><span class="lbl">Line</span><div class="swatches"></div></div>
-      <div class="color-row" data-key="colorSkel"><span class="lbl">Skeleton</span><div class="swatches"></div></div>
-      <div class="color-row" data-key="colorDist"><span class="lbl">Distance</span><div class="swatches"></div></div>
-      <div class="divider"></div>
-      <label>Độ dày nét: <input type="range" id="c-width" min="1" max="6" value="2"></label>
-    </div>
-  </div>
-  <div id="status">chờ bật camera…</div>
+<div class="app">
+  <header class="top">
+    <div class="brand"><div class="logo">AX</div><div><h1>AXIOM <span style="color:var(--accent)">ESP</span> PANEL</h1><p>Camera preview · Local interface demo</p></div></div>
+    <div class="pill">● LOCAL DEMO · USER PERMISSION REQUIRED</div>
+  </header>
+  <main class="layout">
+    <section class="panel">
+      <div class="panel-head"><h2>CAMERA PREVIEW</h2><span class="sub" id="cameraLabel">Camera: off</span></div>
+      <div class="preview" id="preview">
+        <video id="camera" playsinline autoplay muted></video>
+        <div class="preview-empty" id="emptyState"><div class="camera-icon">⌾</div><h3>Camera preview is ready</h3><p>Nhấn “Bật camera sau” để trình duyệt hỏi quyền truy cập. Camera không tự bật khi chưa được bạn cho phép.</p><button class="btn primary" id="startCamera">Bật camera sau</button></div>
+        <div class="hud"><i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i></div>
+      </div>
+      <div class="actions"><button class="btn primary" id="startCamera2">Bật camera sau</button><button class="btn" id="stopCamera">Tắt camera</button><button class="btn" id="locate">Lấy vị trí của tôi</button></div>
+      <div class="note">ESP ở đây là bảng điều khiển giao diện/demo. Web không tự nhận diện hay theo dõi người thật; các công tắc chỉ bật/tắt lớp minh họa trên khung xem.</div>
+      <div class="statusbar">
+        <div class="status-item"><span class="status-dot" id="camDot"></span><b id="camStatus">Camera tắt</b></div>
+        <div class="status-item"><span class="status-dot" id="locDot"></span><b id="locStatus">Vị trí chưa lấy</b></div>
+        <div class="status-item">ESP: <b id="espCount">0/5 bật</b></div>
+      </div>
+    </section>
+    <section class="panel">
+      <div class="tabs" role="tablist"><button class="tab active" data-tab="esp">01 · ESP</button><button class="tab" data-tab="colors">02 · MÀU</button></div>
+      <div class="tabpage active" id="page-esp">
+        <div class="feature"><div class="symbol">□</div><div class="info"><strong>ESP Box</strong><small>Khung viền minh họa</small></div><label class="switch"><input type="checkbox" data-feature="box"><span class="slider"></span></label></div>
+        <div class="feature"><div class="symbol">╱</div><div class="info"><strong>ESP Line</strong><small>Đường chỉ báo minh họa</small></div><label class="switch"><input type="checkbox" data-feature="line"><span class="slider"></span></label></div>
+        <div class="feature"><div class="symbol">♧</div><div class="info"><strong>ESP Skeleton</strong><small>Khung xương minh họa</small></div><label class="switch"><input type="checkbox" data-feature="skeleton"><span class="slider"></span></label></div>
+        <div class="feature"><div class="symbol">↔</div><div class="info"><strong>ESP Distance</strong><small>Khoảng cách demo, không phải đo người thật</small></div><label class="switch"><input type="checkbox" data-feature="distance"><span class="slider"></span></label></div>
+        <div class="feature"><div class="symbol">◎</div><div class="info"><strong>ESP Enemies</strong><small>Đánh dấu đối tượng giả lập trong demo</small></div><label class="switch"><input type="checkbox" data-feature="enemies"><span class="slider"></span></label></div>
+        <div class="actions" style="padding:8px 0 0"><button class="btn" id="allOn">Bật tất cả</button><button class="btn" id="allOff">Tắt tất cả</button></div>
+      </div>
+      <div class="tabpage" id="page-colors">
+        <p class="sub" style="margin:2px 2px 13px">Chọn màu riêng cho từng mục ESP. Màu áp dụng lên ký hiệu và khung giao diện minh họa.</p>
+        <div id="colorSettings"></div>
+      </div>
+    </section>
+  </main>
+  <div class="footer">AXIOM UI · Camera and location are requested only after a button press · Works best on HTTPS or localhost</div>
 </div>
-
+<div class="toast" id="toast" role="status"></div>
 <script>
-window.addEventListener('mp-loaded', initApp);
-
-function initApp() {
-  const video = document.getElementById('video');
-  const overlay = document.getElementById('overlay');
-  const ctx = overlay.getContext('2d');
-  const statusEl = document.getElementById('status');
-  const enemyEl = document.getElementById('enemyCount');
-  const startScreen = document.getElementById('startScreen');
-  const startBtn = document.getElementById('startBtn');
-
-  const PALETTE = ['#ff3355','#ffdd00','#ff66cc','#000000','#ffffff','#00ff88'];
-  const state = {
-    box:true, line:true, skeleton:true, distance:true, enemies:true, mirror:false,
-    colorBox:'#00ff88', colorLine:'#ff3355', colorSkel:'#00ddff', colorDist:'#ffdd00', width:2
-  };
-
-  // Skeleton liền mạch (33 khớp)
-  const CONNECTIONS = [
-    [0,1],[1,2],[2,3],[3,7],[0,4],[4,5],[5,6],[6,8],
-    [0,11],[0,12],[11,13],[13,15],[12,14],[14,16],
-    [11,23],[12,24],[23,24],[23,25],[25,27],[24,26],[26,28],
-    [27,29],[29,31],[27,31],[28,30],[30,32],[28,32]
-  ];
-
-  function resize() {
-    overlay.width = window.innerWidth * devicePixelRatio;
-    overlay.height = window.innerHeight * devicePixelRatio;
-    ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);
-  }
-  window.addEventListener('resize', resize); resize();
-
-  function bindToggle(id, key) {
-    const el = document.getElementById(id); const f = () => state[key] = el.checked;
-    el.addEventListener('change', f); f();
-  }
-  bindToggle('t-esp-box','box'); bindToggle('t-esp-line','line');
-  bindToggle('t-esp-skel','skeleton'); bindToggle('t-esp-dist','distance');
-  bindToggle('t-esp-enemies','enemies'); bindToggle('t-mirror','mirror');
-
-  document.querySelectorAll('.color-row').forEach(row => {
-    const key = row.dataset.key; const holder = row.querySelector('.swatches');
-    PALETTE.forEach(c => {
-      const b = document.createElement('button'); b.className='swatch'; b.style.background=c;
-      if (c.toLowerCase()===state[key]) b.classList.add('active');
-      b.onclick = () => { state[key]=c; holder.querySelectorAll('.swatch').forEach(s=>s.classList.remove('active')); b.classList.add('active'); };
-      holder.appendChild(b);
-    });
-  });
-  document.getElementById('c-width').oninput = e => state.width = +e.target.value;
-
-  document.querySelectorAll('.tab').forEach(btn => {
-    btn.onclick = () => {
-      document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
-      document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
-      btn.classList.add('active'); document.getElementById('tab-'+btn.dataset.tab).classList.add('active');
-    };
-  });
-  document.getElementById('avatarToggle').onclick = () => document.getElementById('panel').classList.toggle('hidden');
-
-  let poseLandmarker = null;
-  let lastVideoTime = -1;
-  let lastResults = [];
-  
-  // Quản lý bộ lọc mượt (Smooth Tracking)
-  let trackedPeople = []; 
-  let nextId = 0;
-
-  async function loadModels() {
-    statusEl.textContent = 'đang tải model AI…';
-    const vision = await window.FilesetResolver.forVisionTasks(
-      "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.12/wasm"
-    );
-    
-    // Sử dụng trực tiếp Pose Landmarker hỗ trợ đa người (numPoses: 5)
-    poseLandmarker = await window.PoseLandmarker.createFromOptions(vision, {
-      baseOptions: {
-        modelAssetPath: "https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_full/float16/1/pose_landmarker_full.task",
-        delegate: "GPU"
-      },
-      runningMode: "VIDEO",
-      numPoses: 5 // Nhận diện tối đa 5 người 1 lúc
-    });
-    statusEl.textContent = 'model OK - chờ camera';
-  }
-
-  function detectLoop() {
-    if (video.readyState < 2 || !poseLandmarker) {
-      requestAnimationFrame(detectLoop); return;
-    }
-    
-    const now = performance.now();
-    // Chỉ chạy AI khi video có frame mới
-    if (video.currentTime !== lastVideoTime) {
-      lastVideoTime = video.currentTime;
-      
-      const results = poseLandmarker.detectForVideo(video, now);
-      
-      if (results && results.landmarks && results.landmarks.length > 0) {
-        // Lưu tạm kết quả raw
-        lastResults = results.landmarks;
-      } else {
-        lastResults = [];
-      }
-    }
-
-    drawFrame(now);
-    requestAnimationFrame(detectLoop);
-  }
-
-  let lastLabel = 0;
-  function drawFrame(now) {
-    const w = window.innerWidth;
-    const h = window.innerHeight;
-    const sw = state.width;
-    ctx.clearRect(0, 0, w, h);
-
-    // Làm mượt (Smooth Tracking) dựa trên khoảng cách khớp
-    lastResults.forEach(lm => {
-      // Tính tâm của người này
-      let cx = 0, cy = 0, count = 0;
-      lm.forEach(p => { if (p.visibility > 0.5) { cx += p.x; cy += p.y; count++; } });
-      if (count === 0) return;
-      cx /= count; cy /= count;
-
-      // Tìm ID cũ gần nhất để kế thừa độ mượt
-      let bestMatch = null;
-      let minDist = 0.2; // khoảng cách tối đa để coi là cùng 1 người
-      trackedPeople.forEach(p => {
-        const dist = Math.hypot(p.cx - cx, p.cy - cy);
-        if (dist < minDist) { minDist = dist; bestMatch = p; }
-      });
-
-      const alpha = 0.4; // Độ mượt (0.1 = mượt nhất, 1 = nhanh nhất)
-      if (bestMatch) {
-        // Cập nhật mượt
-        for(let i=0; i<lm.length; i++) {
-          if (!bestMatch.lm[i]) bestMatch.lm[i] = {x:0, y:0, visibility:0};
-          bestMatch.lm[i].x += (lm[i].x - bestMatch.lm[i].x) * alpha;
-          bestMatch.lm[i].y += (lm[i].y - bestMatch.lm[i].y) * alpha;
-          bestMatch.lm[i].visibility = lm[i].visibility;
-        }
-        bestMatch.cx = cx; bestMatch.cy = cy; bestMatch.lost = 0;
-      } else {
-        // Tạo mới
-        trackedPeople.push({ id: nextId++, lm: JSON.parse(JSON.stringify(lm)), cx, cy, lost: 0 });
-      }
-    });
-
-    // Xóa những người đã biến mất khỏi frame (sau 10 frame ko thấy)
-    trackedPeople.forEach(p => p.lost++);
-    trackedPeople = trackedPeople.filter(p => p.lost < 10);
-
-    // Vẽ
-    trackedPeople.forEach(p => {
-      const lm = p.lm;
-      let minX = 1, minY = 1, maxX = 0, maxY = 0;
-      let hasBody = false;
-
-      lm.forEach(l => {
-        if (l.visibility > 0.4) {
-          hasBody = true;
-          if (l.x < minX) minX = l.x;
-          if (l.y < minY) minY = l.y;
-          if (l.x > maxX) maxX = l.x;
-          if (l.y > maxY) maxY = l.y;
-        }
-      });
-
-      if (!hasBody) return;
-
-      // Bọc Box khít cơ thể
-      const padX = 0.02, padY = 0.02; // Lề rất nhỏ
-      let box = { 
-        x: Math.max(0, minX - padX), 
-        y: Math.max(0, minY - padY), 
-        w: Math.min(1, (maxX - minX) + padX*2), 
-        h: Math.min(1, (maxY - minY) + padY*2) 
-      };
-
-      let bx = box.x * w;
-      let by = box.y * h;
-      let bw = box.w * w;
-      let bh = box.h * h;
-
-      if (state.mirror) {
-        bx = w - bx - bw;
-      }
-
-      // 1. Vẽ Box
-      if (state.box) {
-        ctx.strokeStyle = state.colorBox; 
-        ctx.lineWidth = sw;
-        ctx.strokeRect(bx, by, bw, bh);
-        
-        // Viền góc (Corner Ticks)
-        const t = Math.min(12, bw*0.2, bh*0.2);
-        ctx.lineWidth = sw + 1.5;
-        [[bx,by,1,1],[bx+bw,by,-1,1],[bx,by+bh,1,-1],[bx+bw,by+bh,-1,-1]].forEach(([cx,cy,dx,dy]) => {
-          ctx.beginPath(); ctx.moveTo(cx+dx*t, cy); ctx.lineTo(cx, cy); ctx.lineTo(cx, cy+dy*t); ctx.stroke();
-        });
-      }
-
-      // 2. Vẽ Distance
-      if (state.distance) {
-        const ratio = bh / h;
-        const meters = Math.max(0.5, (1.7 / ratio) * 0.45); 
-        ctx.fillStyle = state.colorDist; 
-        ctx.font = `bold ${11+sw}px monospace`;
-        ctx.textAlign = 'left';
-        ctx.fillText(`${meters.toFixed(1)}m`, bx, by - 6);
-      }
-
-      // 3. Vẽ Line
-      if (state.line) {
-        ctx.strokeStyle = state.colorLine; 
-        ctx.lineWidth = sw;
-        ctx.beginPath(); 
-        ctx.moveTo(w/2, h); 
-        ctx.lineTo(bx + bw/2, by); 
-        ctx.stroke();
-      }
-
-      // 4. Vẽ Skeleton
-      if (state.skeleton) {
-        ctx.strokeStyle = state.colorSkel; 
-        ctx.lineWidth = sw; 
-        ctx.lineCap = 'round';
-        ctx.lineJoin = 'round';
-        
-        // Vẽ dây nối (xương)
-        ctx.beginPath();
-        CONNECTIONS.forEach(([a, b]) => {
-          const p1 = lm[a], p2 = lm[b];
-          if (p1 && p2 && p1.visibility > 0.4 && p2.visibility > 0.4) {
-            let x1 = p1.x * w, y1 = p1.y * h;
-            let x2 = p2.x * w, y2 = p2.y * h;
-            if (state.mirror) { x1 = w-x1; x2 = w-x2; }
-            ctx.moveTo(x1, y1); ctx.lineTo(x2, y2);
-          }
-        });
-        ctx.stroke();
-
-        // Đầu tròn (Mũi / Mắt)
-        const headPoints = [0, 1, 2, 5]; // mũi, mắt trái, mắt phải
-        let hx = 0, hy = 0, hc = 0;
-        headPoints.forEach(idx => {
-          if (lm[idx] && lm[idx].visibility > 0.4) { hx += lm[idx].x; hy += lm[idx].y; hc++; }
-        });
-        if (hc > 0) {
-          hx = (hx/hc) * w; hy = (hy/hc) * h;
-          if (state.mirror) hx = w - hx;
-          ctx.fillStyle = state.colorSkel;
-          ctx.beginPath(); 
-          ctx.arc(hx, hy, Math.max(6, bh*0.08), 0, Math.PI*2); // Bán kính đầu co giãn theo cơ thể
-          ctx.fill();
-        }
-      }
-    });
-
-    // Update Enemies Counter
-    if (state.enemies && now - lastLabel > 200) {
-      lastLabel = now;
-      const count = trackedPeople.filter(p => p.lost === 0).length;
-      enemyEl.textContent = count;
-      enemyEl.classList.toggle('zero', count === 0);
-    }
-  }
-
-  // Bắt đầu
-  startBtn.onclick = async () => {
-    startScreen.style.display = 'none';
-    try {
-      await loadModels();
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: { ideal: 'environment' }, width:{ideal:1280}, height:{ideal:720} }, 
-        audio: false
-      });
-      video.srcObject = stream; 
-      await video.play();
-      statusEl.textContent = 'đang detect…';
-      detectLoop();
-    } catch(e) {
-      statusEl.textContent = 'lỗi: ' + e.message;
-      alert('Lỗi Camera: ' + e.message);
-    }
-  };
+(()=>{
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const colors=[{name:'Đỏ',value:'#ff4d5e'},{name:'Xanh lá',value:'#36e58d'},{name:'Xanh dương',value:'#36a7ff'},{name:'Hồng',value:'#ff63c3'},{name:'Vàng',value:'#ffd34e'},{name:'Trắng',value:'#f4f8ff'}];
+const features=[{id:'box',name:'ESP Box'},{id:'line',name:'ESP Line'},{id:'skeleton',name:'ESP Skeleton'},{id:'distance',name:'ESP Distance'},{id:'enemies',name:'ESP Enemies'}];
+const selectedColor={box:colors[2].value,line:colors[0].value,skeleton:colors[1].value,distance:colors[4].value,enemies:colors[3].value};
+let stream=null,toastTimer=null;
+function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('show'),2600)}
+function updateCount(){const n=$$('input[data-feature]').filter(x=>x.checked).length;$('#espCount').textContent=`${n}/5 bật`}
+function renderColors(){
+ $('#colorSettings').innerHTML=features.map(f=>`<div class="color-row"><div class="color-top"><strong>${f.name}</strong><span class="tiny">${colors.find(c=>c.value===selectedColor[f.id])?.name||'Màu tùy chọn'}</span></div><div class="swatches" role="group" aria-label="Màu ${f.name}">${colors.map(c=>`<button class="swatch ${c.value==='#f4f8ff'?'white':''} ${selectedColor[f.id]===c.value?'selected':''}" style="background:${c.value}" title="${c.name}" aria-label="${c.name}" aria-pressed="${selectedColor[f.id]===c.value}" data-color-feature="${f.id}" data-color="${c.value}"></button>`).join('')}</div></div>`).join('');
+ $$('#colorSettings .swatch').forEach(b=>b.addEventListener('click',()=>{selectedColor[b.dataset.colorFeature]=b.dataset.color;renderColors();applyColors();toast(`${features.find(f=>f.id===b.dataset.colorFeature).name}: ${colors.find(c=>c.value===b.dataset.color).name}`)}))
 }
+function applyColors(){
+ const active=$$('input[data-feature]:checked');
+ document.documentElement.style.setProperty('--accent',active.length?selectedColor[active[0].dataset.feature]:'#39d9ff');
+ $$('.feature').forEach(row=>{const inp=row.querySelector('input[data-feature]');row.querySelector('.symbol').style.color=selectedColor[inp.dataset.feature]});
+}
+async function startCamera(){
+ if(!navigator.mediaDevices?.getUserMedia){toast('Trình duyệt không hỗ trợ camera. Hãy mở bằng HTTPS hoặc localhost.');return}
+ try{
+  if(stream)stream.getTracks().forEach(t=>t.stop());
+  stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}},audio:false});
+  $('#camera').srcObject=stream;$('#camera').classList.add('active');$('#emptyState').style.display='none';
+  $('#cameraLabel').textContent='Camera: on';$('#camStatus').textContent='Camera đang bật';$('#camDot').classList.add('on');toast('Camera đã bật theo quyền bạn cấp.')
+ }catch(e){toast(e.name==='NotAllowedError'?'Bạn chưa cấp quyền camera.':e.name==='NotFoundError'?'Không tìm thấy camera phù hợp.':'Không thể bật camera: '+e.message)}
+}
+function stopCamera(){if(stream){stream.getTracks().forEach(t=>t.stop());stream=null}$('#camera').srcObject=null;$('#camera').classList.remove('active');$('#emptyState').style.display='block';$('#cameraLabel').textContent='Camera: off';$('#camStatus').textContent='Camera tắt';$('#camDot').classList.remove('on');toast('Đã tắt camera.')}
+$('#startCamera').addEventListener('click',startCamera);$('#startCamera2').addEventListener('click',startCamera);$('#stopCamera').addEventListener('click',stopCamera);
+$$('.tab').forEach(tab=>tab.addEventListener('click',()=>{$$('.tab').forEach(t=>t.classList.toggle('active',t===tab));$$('.tabpage').forEach(p=>p.classList.toggle('active',p.id===`page-${tab.dataset.tab}`))}));
+$$('input[data-feature]').forEach(inp=>inp.addEventListener('change',()=>{updateCount();applyColors()}));
+$('#allOn').addEventListener('click',()=>{$$('input[data-feature]').forEach(x=>x.checked=true);updateCount();applyColors()});
+$('#allOff').addEventListener('click',()=>{$$('input[data-feature]').forEach(x=>x.checked=false);updateCount();applyColors()});
+$('#locate').addEventListener('click',()=>{
+ if(!navigator.geolocation){toast('Trình duyệt không hỗ trợ định vị.');return}
+ $('#locStatus').textContent='Đang xin quyền vị trí…';
+ navigator.geolocation.getCurrentPosition(pos=>{$('#locStatus').textContent=`Vị trí đã lấy (${pos.coords.latitude.toFixed(4)}, ${pos.coords.longitude.toFixed(4)})` ;$('#locDot').classList.add('on');toast('Đã lấy vị trí thiết bị của bạn.')},err=>{$('#locStatus').textContent='Không lấy được vị trí';toast(err.code===1?'Bạn chưa cấp quyền vị trí.':'Không thể lấy vị trí; kiểm tra GPS và quyền trình duyệt.')},{enableHighAccuracy:true,timeout:12000,maximumAge:0})
+});
+window.addEventListener('pagehide',()=>{if(stream)stream.getTracks().forEach(t=>t.stop())});
+renderColors();updateCount();applyColors();
+})();
 </script>
 </body>
 </html>
